@@ -1,0 +1,231 @@
+{
+  "info": {
+    "name": "IoT ESP32 API - Updated Schema",
+    "_postman_id": "iot-esp32-api-v2",
+    "description": "API Collection với schema mới: data_sensor & device_actions",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "health"]
+        },
+        "description": "Kiểm tra server và MQTT connection status"
+      }
+    },
+    {
+      "name": "2. Get Device Info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01"]
+        },
+        "description": "Lấy thông tin tổng quan thiết bị (total records, last_seen)"
+      }
+    },
+    {
+      "name": "3. Get Latest Sensor Data",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/last",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "last"]
+        },
+        "description": "Lấy giá trị mới nhất của tất cả sensors (temperature, humidity, light)"
+      }
+    },
+    {
+      "name": "4. Get Time Series - All Sensors",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/series?from=1 hour&limit=100",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "series"],
+          "query": [
+            {
+              "key": "from",
+              "value": "1 hour",
+              "description": "Time range: '1 hour', '24 hours', '1 day', '1 week'"
+            },
+            {
+              "key": "limit",
+              "value": "100",
+              "description": "Max records"
+            }
+          ]
+        },
+        "description": "Lấy dữ liệu time series của tất cả sensors"
+      }
+    },
+    {
+      "name": "5. Get Time Series - Temperature Only",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/series?from=1 hour&sensor=temperature&limit=50",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "series"],
+          "query": [
+            {
+              "key": "from",
+              "value": "1 hour"
+            },
+            {
+              "key": "sensor",
+              "value": "temperature",
+              "description": "temperature | humidity | light"
+            },
+            {
+              "key": "limit",
+              "value": "50"
+            }
+          ]
+        },
+        "description": "Lấy dữ liệu chỉ riêng temperature"
+      }
+    },
+    {
+      "name": "6. Get All Sensor Data (Paginated)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/sensors?page=1&limit=10",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "sensors"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        },
+        "description": "Lấy tất cả dữ liệu sensors với phân trang (cho Data_Sensor table)"
+      }
+    },
+    {
+      "name": "7. Get Device Actions History",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/actions?limit=50",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "actions"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "50"
+            }
+          ]
+        },
+        "description": "Lấy lịch sử điều khiển thiết bị (cho Action History)"
+      }
+    },
+    {
+      "name": "8. Control LED - Turn ON",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"value\": \"ON\",\n  \"issued_by\": \"postman\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/cmd/led",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "cmd", "led"]
+        },
+        "description": "Bật LED qua API (sẽ lưu vào device_actions)"
+      }
+    },
+    {
+      "name": "9. Control LED - Turn OFF",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"value\": \"OFF\",\n  \"issued_by\": \"postman\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/cmd/led",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "cmd", "led"]
+        },
+        "description": "Tắt LED qua API"
+      }
+    },
+    {
+      "name": "10. Control LED - TOGGLE",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"value\": \"TOGGLE\",\n  \"issued_by\": \"web_ui\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/cmd/led",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "cmd", "led"]
+        },
+        "description": "Toggle LED (đảo trạng thái)"
+      }
+    }
+  ]
+}
+

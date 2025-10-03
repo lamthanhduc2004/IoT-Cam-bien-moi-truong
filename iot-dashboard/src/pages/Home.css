@@ -1,0 +1,401 @@
+.home {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sensors-grid {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  grid-template-rows: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+  flex: 2;
+  min-height: 0;
+}
+
+.sensor-card {
+  background: #2d3548;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+}
+
+.sensor-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sensor-icon {
+  font-size: 18px;
+}
+
+.sensor-icon.red {
+  color: #ff6b6b;
+}
+
+.sensor-icon.cyan {
+  color: #00b4d8;
+}
+
+.sensor-icon.yellow {
+  color: #ffd93d;
+}
+
+.sensor-label {
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.sensor-value {
+  font-size: 32px;
+  font-weight: 300;
+}
+
+.sensor-value.red {
+  color: #ff6b6b;
+}
+
+.sensor-value.cyan {
+  color: #00b4d8;
+}
+
+.sensor-value.yellow {
+  color: #ffd93d;
+}
+
+.chart-container {
+  background: #2d3548;
+  padding: 15px 10px 10px 5px;
+  border-radius: 8px;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chart Stats Summary */
+.chart-stats {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 6px 4px;
+  background: rgba(0, 180, 216, 0.08);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  border: 1px solid rgba(0, 180, 216, 0.15);
+}
+
+.chart-stats span {
+  font-size: 9px;
+  color: #00b4d8;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Devices Section */
+.devices-section {
+  background: #3d4663;
+  padding: 15px 20px;
+  border-radius: 8px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.devices-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.wifi-icon {
+  font-size: 22px;
+  color: #00b4d8;
+}
+
+.devices-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.devices-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.device-card {
+  background: #4a5178;
+  padding: 20px 15px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.device-icon {
+  font-size: 50px;
+  color: #ffffff;
+}
+
+.device-icon.spinning {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* AC Container */
+.ac-icon-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+}
+
+/* AC Icon Animation - Cool breeze effect */
+.device-icon.ac-icon.ac-active {
+  animation: coolBreeze 2s ease-in-out infinite;
+  color: #00d4ff;
+}
+
+@keyframes coolBreeze {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 5px rgba(0, 212, 255, 0.3));
+  }
+  25% {
+    transform: scale(1.05) rotate(-2deg);
+    filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+  }
+  50% {
+    transform: scale(1.1) rotate(0deg);
+    filter: drop-shadow(0 0 15px rgba(0, 212, 255, 0.7));
+  }
+  75% {
+    transform: scale(1.05) rotate(2deg);
+    filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+  }
+}
+
+/* Wind Waves Animation */
+.wind-wave {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: rgba(0, 212, 255, 0.6);
+  border-radius: 50%;
+  left: 60%;
+  top: 50%;
+}
+
+.wind-wave.wave-1 {
+  animation: windFlow 1.5s ease-out infinite;
+}
+
+.wind-wave.wave-2 {
+  animation: windFlow 1.5s ease-out infinite 0.3s;
+}
+
+.wind-wave.wave-3 {
+  animation: windFlow 1.5s ease-out infinite 0.6s;
+}
+
+@keyframes windFlow {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(50px, 0) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Lights Animation - Glowing effect */
+.device-icon.light-active {
+  animation: glow 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px #ffd700);
+}
+
+@keyframes glow {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px #ffd700);
+  }
+  50% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 15px #ffd700);
+  }
+}
+
+.device-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.toggle-btn {
+  width: 65px;
+  height: 32px;
+  background: #6c7a8f;
+  border: 2px solid #4CAF50;
+  border-radius: 20px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.toggle-btn.on {
+  background: #4CAF50;
+  border-color: #4CAF50;
+}
+
+.toggle-btn.off {
+  background: #6c7a8f;
+  border-color: #6c7a8f;
+}
+
+.toggle-slider {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.3s ease;
+}
+
+.toggle-btn.on .toggle-slider {
+  transform: translateX(33px);
+}
+
+/* WiFi Icon Status */
+.wifi-icon.connected {
+  color: #00ff00;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.wifi-icon.disconnected {
+  color: #ff4444;
+  opacity: 0.5;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ========================================
+   🚨 ALERT ANIMATIONS - CẢNH BÁO NGƯỠNG
+   ======================================== */
+
+/* Warning Alert - Màu vàng nháy chậm */
+.alert-warning {
+  animation: warningPulse 2s ease-in-out infinite;
+  border: 2px solid #FFA500 !important;
+  box-shadow: 0 0 20px rgba(255, 165, 0, 0.3);
+}
+
+.alert-value-warning {
+  animation: warningGlow 2s ease-in-out infinite;
+  text-shadow: 0 0 10px rgba(255, 165, 0, 0.8);
+}
+
+@keyframes warningPulse {
+  0%, 100% {
+    border-color: #FFA500;
+    box-shadow: 0 0 20px rgba(255, 165, 0, 0.3);
+  }
+  50% {
+    border-color: #FFD700;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+  }
+}
+
+@keyframes warningGlow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(255, 165, 0, 0.8);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(255, 215, 0, 1);
+  }
+}
+
+/* Danger Alert - Màu đỏ nháy nhanh */
+.alert-danger {
+  animation: dangerPulse 1s ease-in-out infinite;
+  border: 2px solid #FF0000 !important;
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+}
+
+.alert-value-danger {
+  animation: dangerGlow 1s ease-in-out infinite;
+  text-shadow: 0 0 15px rgba(255, 0, 0, 1);
+  color: #FF0000 !important;
+}
+
+@keyframes dangerPulse {
+  0%, 100% {
+    border-color: #FF0000;
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+    background-color: rgba(255, 0, 0, 0.05);
+  }
+  50% {
+    border-color: #FF4444;
+    box-shadow: 0 0 35px rgba(255, 68, 68, 0.8);
+    background-color: rgba(255, 0, 0, 0.1);
+  }
+}
+
+@keyframes dangerGlow {
+  0%, 100% {
+    text-shadow: 0 0 15px rgba(255, 0, 0, 1);
+    transform: scale(1);
+  }
+  50% {
+    text-shadow: 0 0 25px rgba(255, 0, 0, 1);
+    transform: scale(1.05);
+  }
+}
+
+/* Normal Alert - Không có animation */
+.alert-normal {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.alert-value-normal {
+  /* Giữ nguyên style gốc */
+}
