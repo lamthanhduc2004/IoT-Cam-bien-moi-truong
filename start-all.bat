@@ -45,7 +45,7 @@ echo.
 
 REM Start MQTT Broker
 echo [1/3] Starting MQTT Broker...
-start "MQTT Broker" cmd /k "cd /d "C:\HOC TAP\IOT" && mosquitto -c Web\broker.conf -v"
+start "MQTT Broker" cmd /k "cd /d "C:\HOC TAP\IOT\Web" && mosquitto -c mqtt-broker\broker.conf -v"
 timeout /t 3 >nul
 
 REM Start Backend Server
