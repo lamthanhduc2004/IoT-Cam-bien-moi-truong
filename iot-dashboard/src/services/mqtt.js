@@ -1,8 +1,8 @@
-// MQTT Service - Kết nối realtime với MQTT broker
 import mqtt from 'mqtt';
+import { MQTT_CONFIG, API_CONFIG } from '../config/constants';
 
-const MQTT_URL = 'ws://192.168.137.1:9001'; // WebSocket MQTT
-const DEVICE_ID = 'esp32_01';
+const { URL: MQTT_URL, USERNAME, PASSWORD, KEEPALIVE, RECONNECT_PERIOD } = MQTT_CONFIG;
+const { DEVICE_ID } = API_CONFIG;
 
 class MqttService {
   constructor() {
@@ -15,7 +15,6 @@ class MqttService {
     };
   }
 
-  // Kết nối MQTT
   connect() {
     if (this.client && this.connected) {
       console.log('MQTT already connected');
@@ -24,10 +23,10 @@ class MqttService {
 
     try {
       this.client = mqtt.connect(MQTT_URL, {
-        username: 'user1',      // ← THÊM DÒNG NÀY
-        password: '123456',     // ← THÊM DÒNG NÀY
-        keepalive: 60,
-        reconnectPeriod: 2000,
+        username: USERNAME,
+        password: PASSWORD,
+        keepalive: KEEPALIVE,
+        reconnectPeriod: RECONNECT_PERIOD,
         clientId: 'web-' + Math.random().toString(16).slice(2, 8),
       });
 
@@ -46,7 +45,6 @@ class MqttService {
       this.client.on('message', (topic, payload) => {
         try {
           const message = payload.toString();
-          console.log(`📥 [${topic}] ${message}`);
 
           if (topic.endsWith('/telemetry')) {
             const data = JSON.parse(message);

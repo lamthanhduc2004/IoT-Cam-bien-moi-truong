@@ -31,6 +31,15 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border: 4px solid #00b4d8;
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.4);
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
 .avatar-placeholder {
@@ -38,6 +47,9 @@
   height: 100%;
   background: #4a5178;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .profile-name {
@@ -77,6 +89,14 @@
 
 .profile-link:hover {
   background: #3d4663;
+}
+
+.profile-info {
+  cursor: default;
+}
+
+.profile-info:hover {
+  background: transparent;
 }
 
 .link-icon {

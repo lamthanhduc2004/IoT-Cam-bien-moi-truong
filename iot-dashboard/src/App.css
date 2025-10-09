@@ -39,7 +39,7 @@
 .page-content {
   padding: 15px 30px;
   flex: 1;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }

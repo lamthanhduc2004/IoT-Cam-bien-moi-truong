@@ -6,6 +6,57 @@
   overflow: hidden;
 }
 
+/* ✅ DATE PICKER SECTION */
+.date-section {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 15px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.calendar-icon {
+  font-size: 20px;
+  color: #00b4d8;
+}
+
+.date-quick-btn {
+  padding: 10px 20px;
+  background: #2d3548;
+  border: 2px solid #4a5178;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.date-quick-btn:hover {
+  background: #3d4558;
+}
+
+.date-input {
+  padding: 10px 15px;
+  background: #2d3548;
+  border: 2px solid #4a5178;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.date-label {
+  margin-left: auto;
+  color: #6c7a8f;
+  font-size: 14px;
+}
+
 .search-section {
   display: flex;
   gap: 12px;
@@ -156,5 +207,17 @@
   border-radius: 20px;
   color: white;
   font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.items-per-page:focus {
+  border-color: #4a5178;
+  outline: none;
+}
+
+.items-per-page:hover {
+  background: #3d4558;
 }
 

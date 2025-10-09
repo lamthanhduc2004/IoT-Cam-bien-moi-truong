@@ -53,6 +53,12 @@ void setup() {
     if (mqttClient.connect("esp32_01", MQTT_USER, MQTT_PASSWORD)) {
       Serial.println("MQTT OK!");
       mqttClient.subscribe(LED_CMD);
+      
+      // ✅ Publish trạng thái ban đầu của LED để đồng bộ với Dashboard
+      String initialStatus = digitalRead(LED_PIN) == HIGH ? "ON" : "OFF";
+      mqttClient.publish(LED_STAT, initialStatus.c_str());
+      Serial.print("Initial LED Status: ");
+      Serial.println(initialStatus);
     } else {
       delay(1000);
     }
@@ -64,8 +70,13 @@ void setup() {
 void loop() {
  
   if (!mqttClient.connected()) {
-    mqttClient.connect("esp32_01", MQTT_USER, MQTT_PASSWORD);
-    mqttClient.subscribe(LED_CMD);
+    if (mqttClient.connect("esp32_01", MQTT_USER, MQTT_PASSWORD)) {
+      mqttClient.subscribe(LED_CMD);
+      
+      // ✅ Publish lại trạng thái sau khi reconnect
+      String currentStatus = digitalRead(LED_PIN) == HIGH ? "ON" : "OFF";
+      mqttClient.publish(LED_STAT, currentStatus.c_str());
+    }
   }
   mqttClient.loop();
   

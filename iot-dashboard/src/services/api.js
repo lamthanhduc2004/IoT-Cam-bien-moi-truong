@@ -1,9 +1,8 @@
-// API Service - Kết nối với Backend
-const API_BASE_URL = 'http://localhost:3000/api';
-const DEVICE_ID = 'esp32_01';
+import { API_CONFIG } from '../config/constants';
+
+const { BASE_URL: API_BASE_URL, DEVICE_ID } = API_CONFIG;
 
 class ApiService {
-  // Health check
   async healthCheck() {
     try {
       const response = await fetch(`${API_BASE_URL}/health`);
@@ -14,7 +13,6 @@ class ApiService {
     }
   }
 
-  // Lấy dữ liệu mới nhất
   async getLatestData() {
     try {
       const response = await fetch(`${API_BASE_URL}/devices/${DEVICE_ID}/last`);
@@ -25,7 +23,6 @@ class ApiService {
     }
   }
 
-  // Lấy dữ liệu time series cho biểu đồ
   async getTimeSeries(from = '1hour', sensor = 'temperature', limit = 50) {
     try {
       const response = await fetch(
@@ -38,8 +35,7 @@ class ApiService {
     }
   }
 
-  // Lấy tất cả sensor data với pagination, search, filter, sorting
-  async getSensors(page = 1, limit = 10, search = '', filter = 'All', orderBy = 'timestamp', orderDir = 'DESC') {
+  async getSensors(page = 1, limit = 10, search = '', filter = 'All', orderBy = 'timestamp', orderDir = 'DESC', date = null) {
     try {
       const params = new URLSearchParams({
         page,
@@ -49,6 +45,10 @@ class ApiService {
         orderBy,
         orderDir
       });
+      
+      if (date) {
+        params.append('date', date);
+      }
       
       const response = await fetch(
         `${API_BASE_URL}/devices/${DEVICE_ID}/sensors?${params}`
@@ -60,20 +60,25 @@ class ApiService {
     }
   }
 
-  // Lấy lịch sử điều khiển (UPDATED)
-  async getActions(limit = 50) {
+  async getActions(page = 1, limit = 10, search = '', filter = 'All', orderBy = 'timestamp', orderDir = 'DESC', date = '') {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/devices/${DEVICE_ID}/actions?limit=${limit}`
-      );
+      const params = new URLSearchParams({
+        page,
+        limit,
+        search,
+        filter,
+        orderBy,
+        orderDir,
+        date
+      });
+      const response = await fetch(`${API_BASE_URL}/devices/${DEVICE_ID}/actions?${params}`);
       return await response.json();
     } catch (error) {
       console.error('Get actions failed:', error);
-      return [];
+      return { data: [], total: 0 };
     }
   }
 
-  // Điều khiển thiết bị
   async controlDevice(target, value, issued_by = 'web') {
     try {
       const response = await fetch(
@@ -93,7 +98,6 @@ class ApiService {
     }
   }
 
-  // Get device info
   async getDeviceInfo() {
     try {
       const response = await fetch(`${API_BASE_URL}/devices/${DEVICE_ID}`);

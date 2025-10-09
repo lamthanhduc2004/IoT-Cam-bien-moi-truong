@@ -1,24 +1,46 @@
-import { useState, useEffect } from 'react';
-import { FaSearch, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { useState, useEffect, useCallback } from 'react';
+import { FaChevronLeft, FaChevronRight, FaCalendar } from 'react-icons/fa';
 import apiService from '../services/api';
+import { PAGINATION, DATE_FORMAT } from '../config/constants';
 import './DataSensor.css';
 
 const DataSensor = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchInput, setSearchInput] = useState(''); // ✅ Tách riêng input để chỉ search khi Enter
+  const [searchInput, setSearchInput] = useState('');
   const [filterType, setFilterType] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [sensorData, setSensorData] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [itemsPerPage, setItemsPerPage] = useState(10); // ✅ Có thể thay đổi page size
-  const [orderBy, setOrderBy] = useState('timestamp'); // ✅ Cột đang sắp xếp
-  const [orderDir, setOrderDir] = useState('DESC'); // ✅ Hướng sắp xếp
-  const [sortState, setSortState] = useState({}); // ✅ Track trạng thái sort của từng cột
+  const [itemsPerPage, setItemsPerPage] = useState(PAGINATION.DEFAULT_PAGE_SIZE);
+  const [orderBy, setOrderBy] = useState('timestamp');
+  const [orderDir, setOrderDir] = useState('DESC');
+  const [sortState, setSortState] = useState({});
+  
+  const getTodayDate = useCallback(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
+  
+  const [selectedDate, setSelectedDate] = useState(() => getTodayDate());
+  const [isManualDateSelection, setIsManualDateSelection] = useState(false);
 
   const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
-  // Fetch data from backend (with search, filter, sorting)
+  useEffect(() => {
+    const checkDate = setInterval(() => {
+      const currentDate = getTodayDate();
+      if (!isManualDateSelection && selectedDate !== currentDate) {
+        setSelectedDate(currentDate);
+      }
+    }, 60000);
+
+    return () => clearInterval(checkDate);
+  }, [selectedDate, isManualDateSelection, getTodayDate]);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -28,18 +50,19 @@ const DataSensor = () => {
         searchTerm, 
         filterType,
         orderBy,
-        orderDir
+        orderDir,
+        selectedDate
       );
       
       if (result && result.data) {
-        // ✅ Backend đã group sẵn, chỉ format lại
-        const formatted = result.data.map(item => ({
+        const formatted = result.data.map((item, index) => ({
           id: item.id,
+          stt: (currentPage - 1) * itemsPerPage + index + 1,
           temperature: item.temperature != null ? item.temperature.toFixed(1) : '-',
           humidity: item.humidity != null ? item.humidity.toFixed(1) : '-',
           light: item.light != null ? item.light.toFixed(0) : '-',
-          time: new Date(item.timestamp).toLocaleString('vi-VN'),
-          rawTimestamp: item.timestamp // ✅ Giữ timestamp gốc để copy
+          time: new Date(item.timestamp).toLocaleString(DATE_FORMAT.LOCALE),
+          rawTimestamp: item.timestamp
         }));
 
         setSensorData(formatted);
@@ -49,11 +72,9 @@ const DataSensor = () => {
     };
 
     fetchData();
-  }, [currentPage, itemsPerPage, searchTerm, filterType, orderBy, orderDir]);
+  }, [currentPage, itemsPerPage, searchTerm, filterType, orderBy, orderDir, selectedDate]);
 
-  // ✅ XỬ LÝ SẮP XẾP (BACKEND SORTING theo yêu cầu thầy)
-  // Ấn lần 1: ASC, Ấn lần 2: DESC, Ấn lần 3: về mặc định (timestamp DESC)
-  const handleSort = (column) => {
+  const handleSort = useCallback((column) => {
     const currentState = sortState[column] || 'none';
     let newState, newOrderBy, newOrderDir;
 
@@ -66,42 +87,61 @@ const DataSensor = () => {
       newOrderBy = column;
       newOrderDir = 'DESC';
     } else {
-      // Reset về mặc định
       newState = 'none';
       newOrderBy = 'timestamp';
       newOrderDir = 'DESC';
     }
 
-    setSortState({ [column]: newState }); // Reset các cột khác
+    setSortState({ [column]: newState });
     setOrderBy(newOrderBy);
     setOrderDir(newOrderDir);
-    setCurrentPage(1); // Reset về page 1
-  };
+    setCurrentPage(1);
+  }, [sortState]);
 
-  // ✅ CLICK TO COPY TIME
-  const handleCopyTime = (timestamp) => {
-    navigator.clipboard.writeText(timestamp).then(() => {
-      // Visual feedback (có thể thêm toast notification)
-      console.log('✅ Copied:', timestamp);
-    });
-  };
+  const handleCopyTime = useCallback((timestamp) => {
+    navigator.clipboard.writeText(timestamp);
+  }, []);
 
-  // ✅ XỬ LÝ SEARCH
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     setSearchTerm(searchInput);
     setCurrentPage(1);
-  };
+  }, [searchInput]);
 
-  // ✅ ENTER KEY HANDLER
-  const handleKeyPress = (e) => {
+  const handleKeyPress = useCallback((e) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
-  };
+  }, [handleSearch]);
 
-  const getPageNumbers = () => {
+  const handleDateChange = useCallback((e) => {
+    const newDate = e.target.value;
+    setSelectedDate(newDate);
+    setCurrentPage(1);
+    setIsManualDateSelection(newDate !== getTodayDate());
+  }, [getTodayDate]);
+
+  const handleToday = useCallback(() => {
+    const today = getTodayDate();
+    setSelectedDate(today);
+    setCurrentPage(1);
+    setIsManualDateSelection(false);
+  }, [getTodayDate]);
+
+  const handleYesterday = useCallback(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const year = yesterday.getFullYear();
+    const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+    const day = String(yesterday.getDate()).padStart(2, '0');
+    const yesterdayStr = `${year}-${month}-${day}`;
+    setSelectedDate(yesterdayStr);
+    setCurrentPage(1);
+    setIsManualDateSelection(true);
+  }, []);
+
+  const getPageNumbers = useCallback(() => {
     const pages = [];
-    if (totalPages <= 7) {
+    if (totalPages <= PAGINATION.MAX_PAGE_BUTTONS) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
@@ -123,15 +163,35 @@ const DataSensor = () => {
       }
     }
     return pages;
-  };
+  }, [totalPages, currentPage]);
 
   return (
     <div className="data-sensor">
+      <div className="date-section">
+        <FaCalendar className="calendar-icon" />
+        <button className="date-quick-btn" onClick={handleToday}>
+          Hôm nay
+        </button>
+        <button className="date-quick-btn" onClick={handleYesterday}>
+          Hôm qua
+        </button>
+        <input
+          type="date"
+          className="date-input"
+          value={selectedDate}
+          onChange={handleDateChange}
+          max={getTodayDate()}
+        />
+        <span className="date-label">
+          ({totalRecords} records)
+        </span>
+      </div>
+
       <div className="search-section">
         <input
           type="text"
           className="search-input"
-          placeholder="Search (ID,Temperature,Humidity,Light,Time) - Press Enter"
+          placeholder="Tìm kiếm dữ liệu: Nhiệt độ, độ ẩm, ánh sáng, thời gian"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onKeyPress={handleKeyPress}
@@ -166,8 +226,8 @@ const DataSensor = () => {
           <table className="data-table">
             <thead>
               <tr>
-                <th onClick={() => handleSort('id')} style={{ cursor: 'pointer' }}>
-                  ID {sortState['id'] === 'asc' ? '↑' : sortState['id'] === 'desc' ? '↓' : ''}
+                <th style={{ cursor: 'default' }}>
+                  STT
                 </th>
                 <th onClick={() => handleSort('temperature')} style={{ cursor: 'pointer' }}>
                   Temperature(°C) {sortState['temperature'] === 'asc' ? '↑' : sortState['temperature'] === 'desc' ? '↓' : ''}
@@ -185,51 +245,27 @@ const DataSensor = () => {
             </thead>
             <tbody>
               {sensorData.length > 0 ? (
-                <>
-                  {sensorData.map((row, index) => (
-                    <tr key={row.id} className={index % 2 === 0 ? 'even' : 'odd'}>
-                      <td>{row.id}</td>
-                      <td>{row.temperature}</td>
-                      <td>{row.humidity}</td>
-                      <td>{row.light}</td>
-                      <td 
-                        onClick={() => handleCopyTime(row.time)}
-                        style={{ cursor: 'pointer' }}
-                        title="Click to copy"
-                      >
-                        {row.time}
-                      </td>
-                    </tr>
-                  ))}
-                  {/* ✅ Fill empty rows để luôn đủ pageSize */}
-                  {[...Array(Math.max(0, itemsPerPage - sensorData.length))].map((_, index) => (
-                    <tr key={`empty-${index}`} className={(sensorData.length + index) % 2 === 0 ? 'even' : 'odd'}>
-                      <td>&nbsp;</td>
-                      <td>&nbsp;</td>
-                      <td>&nbsp;</td>
-                      <td>&nbsp;</td>
-                      <td>&nbsp;</td>
-                    </tr>
-                  ))}
-                </>
-              ) : (
-                <>
-                  <tr>
-                    <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
-                      No data available
+                sensorData.map((row, index) => (
+                  <tr key={row.id} className={index % 2 === 0 ? 'even' : 'odd'}>
+                    <td>{row.stt}</td>
+                    <td>{row.temperature}</td>
+                    <td>{row.humidity}</td>
+                    <td>{row.light}</td>
+                    <td 
+                      onClick={() => handleCopyTime(row.time)}
+                      style={{ cursor: 'pointer' }}
+                      title="Click to copy"
+                    >
+                      {row.time}
                     </td>
                   </tr>
-                  {/* ✅ Fill empty rows */}
-                  {[...Array(itemsPerPage - 1)].map((_, index) => (
-                    <tr key={`empty-${index}`} className={(index + 1) % 2 === 0 ? 'even' : 'odd'}>
-                      <td>&nbsp;</td>
-                      <td>&nbsp;</td>
-                      <td>&nbsp;</td>
-                      <td>&nbsp;</td>
-                      <td>&nbsp;</td>
-                    </tr>
-                  ))}
-                </>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
+                    No data available for {selectedDate}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -268,27 +304,16 @@ const DataSensor = () => {
         </button>
 
         <select 
-          className="page-size-select"
+          className="items-per-page"
           value={itemsPerPage}
           onChange={(e) => {
             setItemsPerPage(Number(e.target.value));
             setCurrentPage(1);
           }}
-          style={{ 
-            marginLeft: '6px',
-            padding: '3px 6px',
-            borderRadius: '4px',
-            border: '1px solid #00b4d8',
-            background: '#1e2536',
-            color: '#fff',
-            cursor: 'pointer',
-            fontSize: '11px'
-          }}
         >
-          <option value={5}>5/page</option>
-          <option value={10}>10/page</option>
-          <option value={15}>15/page</option>
-          <option value={20}>20/page</option>
+          {PAGINATION.PAGE_SIZE_OPTIONS.map(size => (
+            <option key={size} value={size}>{size}/page</option>
+          ))}
         </select>
       </div>
     </div>

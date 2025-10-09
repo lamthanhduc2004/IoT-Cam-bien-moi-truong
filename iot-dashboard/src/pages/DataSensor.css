@@ -3,13 +3,68 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
+}
+
+/* ✅ DATE PICKER SECTION */
+.date-section {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background: #2d3548;
+  border-radius: 6px;
+}
+
+.calendar-icon {
+  color: #00b4d8;
+  font-size: 16px;
+}
+
+.date-quick-btn {
+  padding: 4px 12px;
+  background: #1e2536;
+  border: 1px solid #4a5178;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.date-quick-btn:hover {
+  background: #00b4d8;
+  border-color: #00b4d8;
+}
+
+.date-input {
+  padding: 4px 8px;
+  background: #1e2536;
+  border: 1px solid #4a5178;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+  outline: none;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.date-label {
+  color: #6c7a8f;
+  font-size: 11px;
+  margin-left: auto;
 }
 
 .search-section {
   display: flex;
   gap: 6px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   align-items: center;
   flex-shrink: 0;
 }
@@ -61,38 +116,64 @@
   background: transparent;
   border: 1px solid #4a5178;
   border-radius: 6px;
-  margin-bottom: 4px;
-  overflow: hidden;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 3px;
+  overflow-y: scroll !important;
+  overflow-x: hidden;
+  height: 450px !important;
+  max-height: 450px;
+  /* Custom Scrollbar cho Firefox */
+  scrollbar-width: auto;
+  scrollbar-color: #00b4d8 #1a1f2e;
+}
+
+/* ✅ Scrollbar rõ ràng, to, màu xanh */
+.table-container::-webkit-scrollbar {
+  width: 12px !important;
+  height: 12px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #1a1f2e;
+  border-radius: 6px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #00b4d8;
+  border-radius: 6px;
+  border: 2px solid #1a1f2e;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #03a9f4;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  height: 100%;
 }
 
 .data-table thead {
   background: #2d3548;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .data-table th {
-  padding: 3px 2px;
+  padding: 2px 2px;
   text-align: center;
   font-size: 11px;
   font-weight: 600;
   color: white;
+  background: #2d3548;
   border-bottom: 1px solid #4a5178;
   white-space: nowrap;
   line-height: 1.0;
-  height: 24px;
+  height: 22px;
 }
 
 .data-table td {
-  padding: 2px;
+  padding: 1px;
   text-align: center;
   font-size: 11px;
   color: white;
@@ -101,7 +182,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.0;
-  height: 22px;
+  height: 20px;
 }
 
 .data-table tbody tr.even {
@@ -123,9 +204,9 @@
 }
 
 .page-btn {
-  min-width: 28px;
-  height: 28px;
-  padding: 4px 6px;
+  min-width: 26px;
+  height: 26px;
+  padding: 3px 5px;
   background: #e0e0e0;
   border: none;
   border-radius: 4px;
@@ -172,5 +253,16 @@
   border-radius: 20px;
   color: white;
   font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
 }
 
+.items-per-page:focus {
+  border-color: #4a5178;
+  outline: none;
+}
+
+.items-per-page:hover {
+  background: #3d4558;
+}

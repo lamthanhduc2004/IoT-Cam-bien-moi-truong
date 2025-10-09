@@ -7,8 +7,16 @@ const Profile = () => {
       <div className="profile-card">
         <div className="profile-avatar">
           <div className="avatar-circle">
-            {/* Placeholder cho avatar */}
-            <div className="avatar-placeholder"></div>
+            <img 
+              src="/Anhthe.jpg" 
+              alt="Lâm Thành Đức" 
+              className="avatar-image"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div className="avatar-placeholder" style={{ display: 'none' }}></div>
           </div>
         </div>
 
@@ -16,27 +24,27 @@ const Profile = () => {
         <p className="profile-id">MSV:B22DCCN227 | D22HTTT06</p>
 
         <div className="profile-links">
-          <a href="mailto:DucLT.B22CN227@stu.ptit.edu.vn" className="profile-link">
+          <div className="profile-link profile-info">
             <FaEnvelope className="link-icon" />
             <span>DucLT.B22CN227@stu.ptit.edu.vn</span>
-          </a>
+          </div>
 
-          <a href="tel:0386275204" className="profile-link">
+          <div className="profile-link profile-info">
             <FaPhone className="link-icon" />
             <span>0386275204</span>
-          </a>
+          </div>
 
-          <a href="https://github.com/LamThanhDuc" target="_blank" rel="noopener noreferrer" className="profile-link">
+          <a href="https://github.com/lamthanhduc2004/IoT-Cam-bien-moi-truong" target="_blank" rel="noopener noreferrer" className="profile-link">
             <FaGithub className="link-icon" />
             <span>Lam Thanh Duc</span>
           </a>
 
-          <a href="#" className="profile-link">
+          <a href="/docs/SRS_IoT_Demo.docx" download className="profile-link">
             <FaFilePdf className="link-icon" />
             <span>Download PDF</span>
           </a>
 
-          <a href="#" className="profile-link">
+          <a href="https://documenter.getpostman.com/view/42122897/2sB3QKrVjN" target="_blank" rel="noopener noreferrer" className="profile-link">
             <FaBook className="link-icon" />
             <span>API Documentation</span>
           </a>

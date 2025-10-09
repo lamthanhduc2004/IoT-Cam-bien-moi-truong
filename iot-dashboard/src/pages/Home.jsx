@@ -1,36 +1,32 @@
-import { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { useState, useEffect, useCallback, memo } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FaThermometerHalf, FaTint, FaSun, FaFan, FaLightbulb, FaWifi, FaWind } from 'react-icons/fa';
 import apiService from '../services/api';
 import mqttService from '../services/mqtt';
+import { CHART_CONFIG, SENSOR_THRESHOLDS, SENSOR_RANGES } from '../config/constants';
+import { sampleChartData, calculateStats, getAlertLevel } from '../utils/chartHelpers';
 import './Home.css';
 
 const Home = () => {
-  // Device states
-  const [fanOn, setFanOn] = useState(false);
-  const [acOn, setAcOn] = useState(false);
-  const [lightsOn, setLightsOn] = useState(false);
+  const [fanOn, setFanOn] = useState(() => localStorage.getItem('device_fan') === 'true');
+  const [acOn, setAcOn] = useState(() => localStorage.getItem('device_ac') === 'true');
+  const [lightsOn, setLightsOn] = useState(() => localStorage.getItem('device_lights') === 'true');
 
-  // Sensor data
   const [temperature, setTemperature] = useState(0);
   const [humidity, setHumidity] = useState(0);
   const [light, setLight] = useState(0);
 
-  // Chart data
   const [tempData, setTempData] = useState([]);
   const [humidityData, setHumidityData] = useState([]);
   const [lightData, setLightData] = useState([]);
 
-  // MQTT connection status
   const [mqttConnected, setMqttConnected] = useState(false);
 
-  // Stats tracking
   const [tempStats, setTempStats] = useState({ min: 0, max: 0, avg: 0 });
   const [humStats, setHumStats] = useState({ min: 0, max: 0, avg: 0 });
   const [lightStats, setLightStats] = useState({ min: 0, max: 0, avg: 0 });
 
-  // ✅ Custom Tooltip Component
-  const CustomTooltip = ({ active, payload, label, unit }) => {
+  const CustomTooltip = memo(({ active, payload, label, unit }) => {
     if (active && payload && payload.length) {
       return (
         <div style={{
@@ -50,34 +46,9 @@ const Home = () => {
       );
     }
     return null;
-  };
+  });
 
-  // ✅ Hàm kiểm tra mức cảnh báo
-  const getAlertLevel = (value, type) => {
-    switch (type) {
-      case 'temperature':
-        if (value < 10 || value > 35) return 'danger';
-        if (value < 15 || value > 30) return 'warning';
-        return 'normal';
-      
-      case 'humidity':
-        if (value < 20 || value > 80) return 'danger';
-        if (value < 30 || value > 70) return 'warning';
-        return 'normal';
-      
-      case 'light':
-        if (value < 100 || value > 4000) return 'danger';
-        if (value < 200 || value > 3000) return 'warning';
-        return 'normal';
-      
-      default:
-        return 'normal';
-    }
-  };
-
-  // Fetch initial data và chart data
   useEffect(() => {
-    // Fetch latest sensor data
     const fetchLatestData = async () => {
       const data = await apiService.getLatestData();
       if (data) {
@@ -87,206 +58,60 @@ const Home = () => {
       }
     };
 
-    // Fetch chart data
     const fetchChartData = async () => {
-      // ✅ Query "today" - Backend sẽ lấy data từ 00:00 hôm nay (tối ưu!)
-      const tempSeries = await apiService.getTimeSeries('today', 'temperature', 20000);
-      const humSeries = await apiService.getTimeSeries('today', 'humidity', 20000);
-      const lightSeries = await apiService.getTimeSeries('today', 'light', 20000);
+      const tempSeries = await apiService.getTimeSeries('today', 'temperature', CHART_CONFIG.DEFAULT_LIMIT);
+      const humSeries = await apiService.getTimeSeries('today', 'humidity', CHART_CONFIG.DEFAULT_LIMIT);
+      const lightSeries = await apiService.getTimeSeries('today', 'light', CHART_CONFIG.DEFAULT_LIMIT);
 
       if (tempSeries?.data && tempSeries.data.length > 0) {
-        // ✅ BIỂU ĐỒ 24H: Chỉ hiển thị data HÔM NAY, sampling 30 phút
-        const sampledData = [];
-        const intervalMs = 30 * 60 * 1000; // 30 phút
-        
-        // Lấy 00:00 và 24:00 của HÔM NAY (local time)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const dayStart = today.getTime();
-        const dayEnd = dayStart + 24 * 60 * 60 * 1000;
-        
-        console.log('🆕 CODE MỚI CHẠY! HÔM NAY:', today.toLocaleDateString('vi-VN'));
-        console.log('   Backend trả về:', tempSeries.data.length, 'records');
-        
-        // Lọc chỉ lấy data HÔM NAY
-        const todayData = tempSeries.data.filter(d => {
-          const ts = new Date(d.timestamp).getTime();
-          return ts >= dayStart && ts < dayEnd;
-        });
-        
-        console.log('   Data hôm nay:', todayData.length, 'records');
-        
-        // Tạo 48 time slots (00:00 → 24:00)
-        for (let i = 0; i < 48; i++) {
-          const slotStart = dayStart + (i * intervalMs);
-          const slotEnd = slotStart + intervalMs;
-          
-          // Lấy data points trong slot này
-          const pointsInSlot = todayData.filter(d => {
-            const ts = new Date(d.timestamp).getTime();
-            return ts >= slotStart && ts < slotEnd;
-          });
-          
-          // CHỈ THÊM ĐIỂM NẾU CÓ DATA
-          if (pointsInSlot.length > 0) {
-            const avgValue = pointsInSlot.reduce((sum, p) => sum + p.value, 0) / pointsInSlot.length;
-            const slotDate = new Date(slotStart);
-            
-            sampledData.push({
-              time: slotDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-              value: avgValue,
-              timestamp: slotDate.toISOString()
-            });
-          }
-        }
-        
-        console.log('   Sau sampling:', sampledData.length, 'điểm');
-        if (sampledData.length > 0) {
-          console.log('   Từ:', sampledData[0].time, '→', sampledData[sampledData.length - 1].time);
-        }
-        
-        setTempData(sampledData);
-        
-        // Calculate stats từ raw data
-        const values = tempSeries.data.map(d => d.value);
-        setTempStats({
-          min: Math.min(...values),
-          max: Math.max(...values),
-          avg: values.reduce((a, b) => a + b, 0) / values.length
-        });
+        setTempData(sampleChartData(tempSeries.data));
+        setTempStats(calculateStats(tempSeries.data));
       }
       
       if (humSeries?.data && humSeries.data.length > 0) {
-        // ✅ BIỂU ĐỒ 24H: Chỉ hiển thị data HÔM NAY, sampling 30 phút
-        const sampledData = [];
-        const intervalMs = 30 * 60 * 1000;
-        
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const dayStart = today.getTime();
-        const dayEnd = dayStart + 24 * 60 * 60 * 1000;
-        
-        const todayData = humSeries.data.filter(d => {
-          const ts = new Date(d.timestamp).getTime();
-          return ts >= dayStart && ts < dayEnd;
-        });
-        
-        for (let i = 0; i < 48; i++) {
-          const slotStart = dayStart + (i * intervalMs);
-          const slotEnd = slotStart + intervalMs;
-          
-          const pointsInSlot = todayData.filter(d => {
-            const ts = new Date(d.timestamp).getTime();
-            return ts >= slotStart && ts < slotEnd;
-          });
-          
-          if (pointsInSlot.length > 0) {
-            const avgValue = pointsInSlot.reduce((sum, p) => sum + p.value, 0) / pointsInSlot.length;
-            const slotDate = new Date(slotStart);
-            
-            sampledData.push({
-              time: slotDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-              value: avgValue,
-              timestamp: slotDate.toISOString()
-            });
-          }
-        }
-        
-        setHumidityData(sampledData);
-        
-        const values = humSeries.data.map(d => d.value);
-        setHumStats({
-          min: Math.min(...values),
-          max: Math.max(...values),
-          avg: values.reduce((a, b) => a + b, 0) / values.length
-        });
+        setHumidityData(sampleChartData(humSeries.data));
+        setHumStats(calculateStats(humSeries.data));
       }
       
       if (lightSeries?.data && lightSeries.data.length > 0) {
-        // ✅ BIỂU ĐỒ 24H: Chỉ hiển thị data HÔM NAY, sampling 30 phút
-        const sampledData = [];
-        const intervalMs = 30 * 60 * 1000;
-        
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const dayStart = today.getTime();
-        const dayEnd = dayStart + 24 * 60 * 60 * 1000;
-        
-        const todayData = lightSeries.data.filter(d => {
-          const ts = new Date(d.timestamp).getTime();
-          return ts >= dayStart && ts < dayEnd;
-        });
-        
-        for (let i = 0; i < 48; i++) {
-          const slotStart = dayStart + (i * intervalMs);
-          const slotEnd = slotStart + intervalMs;
-          
-          const pointsInSlot = todayData.filter(d => {
-            const ts = new Date(d.timestamp).getTime();
-            return ts >= slotStart && ts < slotEnd;
-          });
-          
-          if (pointsInSlot.length > 0) {
-            const avgValue = pointsInSlot.reduce((sum, p) => sum + p.value, 0) / pointsInSlot.length;
-            const slotDate = new Date(slotStart);
-            
-            sampledData.push({
-              time: slotDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-              value: avgValue,
-              timestamp: slotDate.toISOString()
-            });
-          }
-        }
-        
-        setLightData(sampledData);
-        
-        const values = lightSeries.data.map(d => d.value);
-        setLightStats({
-          min: Math.min(...values),
-          max: Math.max(...values),
-          avg: values.reduce((a, b) => a + b, 0) / values.length
-        });
+        setLightData(sampleChartData(lightSeries.data));
+        setLightStats(calculateStats(lightSeries.data));
       }
     };
 
     fetchLatestData();
     fetchChartData();
 
-    // Refresh data every 10 seconds
     const interval = setInterval(() => {
       fetchLatestData();
       fetchChartData();
-    }, 10000);
+    }, CHART_CONFIG.UPDATE_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, []);
 
-  // MQTT realtime updates
   useEffect(() => {
-    // Connect MQTT
     mqttService.connect();
+    setMqttConnected(mqttService.isConnected());
 
-    // Listen for telemetry
     const handleTelemetry = (data) => {
-      console.log('📊 Realtime data:', data);
       if (data.temperature != null) setTemperature(data.temperature);
       if (data.humidity != null) setHumidity(data.humidity);
       if (data.light != null) setLight(data.light);
     };
 
-    // Listen for LED status
     const handleLedStatus = (status) => {
-      console.log('💡 LED status:', status);
-      setLightsOn(status === 'ON');
+      const newState = status === 'ON';
+      setLightsOn(newState);
+      localStorage.setItem('device_lights', newState);
     };
 
     mqttService.on('telemetry', handleTelemetry);
     mqttService.on('ledStatus', handleLedStatus);
 
-    // Check MQTT connection every second
     const checkConnection = setInterval(() => {
       setMqttConnected(mqttService.isConnected());
-    }, 5000);
+    }, CHART_CONFIG.CONNECTION_CHECK_INTERVAL_MS);
 
     return () => {
       mqttService.off('telemetry', handleTelemetry);
@@ -295,48 +120,41 @@ const Home = () => {
     };
   }, []);
 
-  // Control handlers
-  const handleFanToggle = async () => {
+  const handleFanToggle = useCallback(async () => {
     const newState = !fanOn;
     setFanOn(newState);
-    const result = await apiService.controlDevice('fan', newState ? 'ON' : 'OFF', 'web-user');
-    console.log('Fan control:', result);
-  };
+    localStorage.setItem('device_fan', newState);
+    await apiService.controlDevice('fan', newState ? 'ON' : 'OFF', 'web-user');
+  }, [fanOn]);
 
-  const handleAcToggle = async () => {
+  const handleAcToggle = useCallback(async () => {
     const newState = !acOn;
     setAcOn(newState);
-    const result = await apiService.controlDevice('ac', newState ? 'ON' : 'OFF', 'web-user');
-    console.log('AC control:', result);
-  };
+    localStorage.setItem('device_ac', newState);
+    await apiService.controlDevice('ac', newState ? 'ON' : 'OFF', 'web-user');
+  }, [acOn]);
 
-  const handleLightsToggle = async () => {
+  const handleLightsToggle = useCallback(async () => {
     const newState = !lightsOn;
     setLightsOn(newState);
-    
-    // Gửi command qua API (sẽ publish MQTT)
-    const result = await apiService.controlDevice('led', newState ? 'ON' : 'OFF', 'web-user');
-    console.log('LED control:', result);
-    
-    // MQTT sẽ nhận status update từ ESP32
-  };
+    localStorage.setItem('device_lights', newState);
+    await apiService.controlDevice('led', newState ? 'ON' : 'OFF', 'web-user');
+  }, [lightsOn]);
 
   return (
     <div className="home">
       <div className="sensors-grid">
-        {/* Temperature Section */}
-        <div className={`sensor-card alert-${getAlertLevel(temperature, 'temperature')}`}>
+        <div className={`sensor-card alert-${getAlertLevel(temperature, SENSOR_THRESHOLDS.temperature)}`}>
           <div className="sensor-header">
             <FaThermometerHalf className="sensor-icon red" />
             <span className="sensor-label">Temperature</span>
           </div>
-          <div className={`sensor-value red alert-value-${getAlertLevel(temperature, 'temperature')}`}>
-            {temperature.toFixed(1)}°C
+          <div className={`sensor-value red alert-value-${getAlertLevel(temperature, SENSOR_THRESHOLDS.temperature)}`}>
+            {temperature.toFixed(1)}{SENSOR_RANGES.temperature.unit}
           </div>
         </div>
 
         <div className="chart-container">
-          {/* Removed stats header to give more space for the chart */}
           <ResponsiveContainer width="100%" height="85%">
             <LineChart data={tempData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d3548" />
@@ -349,10 +167,10 @@ const Home = () => {
               <YAxis 
                 stroke="#6c7a8f" 
                 tick={{ fontSize: 10 }}
-                domain={[0, 40]}
-                label={{ value: '°C', angle: 0, position: 'top', offset: 10, style: { fontSize: 10, fill: '#6c7a8f' } }}
+                domain={[SENSOR_RANGES.temperature.min, SENSOR_RANGES.temperature.max]}
+                label={{ value: SENSOR_RANGES.temperature.unit, angle: 0, position: 'top', offset: 10, style: { fontSize: 10, fill: '#6c7a8f' } }}
               />
-              <Tooltip content={(props) => <CustomTooltip {...props} unit="°C" />} />
+              <Tooltip content={(props) => <CustomTooltip {...props} unit={SENSOR_RANGES.temperature.unit} />} />
               <Line 
                 type="monotone" 
                 dataKey="value" 
@@ -366,19 +184,17 @@ const Home = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Humidity Section */}
-        <div className={`sensor-card alert-${getAlertLevel(humidity, 'humidity')}`}>
+        <div className={`sensor-card alert-${getAlertLevel(humidity, SENSOR_THRESHOLDS.humidity)}`}>
           <div className="sensor-header">
             <FaTint className="sensor-icon cyan" />
             <span className="sensor-label">Humidity</span>
           </div>
-          <div className={`sensor-value cyan alert-value-${getAlertLevel(humidity, 'humidity')}`}>
-            {humidity.toFixed(1)}%
+          <div className={`sensor-value cyan alert-value-${getAlertLevel(humidity, SENSOR_THRESHOLDS.humidity)}`}>
+            {humidity.toFixed(1)}{SENSOR_RANGES.humidity.unit}
           </div>
         </div>
 
         <div className="chart-container">
-          {/* Removed stats header to give more space for the chart */}
           <ResponsiveContainer width="100%" height="85%">
             <LineChart data={humidityData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d3548" />
@@ -391,10 +207,10 @@ const Home = () => {
               <YAxis 
                 stroke="#6c7a8f" 
                 tick={{ fontSize: 10 }}
-                domain={[0, 100]}
-                label={{ value: '%', angle: 0, position: 'top', offset: 10, style: { fontSize: 10, fill: '#6c7a8f' } }}
+                domain={[SENSOR_RANGES.humidity.min, SENSOR_RANGES.humidity.max]}
+                label={{ value: SENSOR_RANGES.humidity.unit, angle: 0, position: 'top', offset: 10, style: { fontSize: 10, fill: '#6c7a8f' } }}
               />
-              <Tooltip content={(props) => <CustomTooltip {...props} unit="%" />} />
+              <Tooltip content={(props) => <CustomTooltip {...props} unit={SENSOR_RANGES.humidity.unit} />} />
               <Line 
                 type="monotone" 
                 dataKey="value" 
@@ -408,19 +224,17 @@ const Home = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Lights Section */}
-        <div className={`sensor-card alert-${getAlertLevel(light, 'light')}`}>
+        <div className={`sensor-card alert-${getAlertLevel(light, SENSOR_THRESHOLDS.light)}`}>
           <div className="sensor-header">
             <FaSun className="sensor-icon yellow" />
             <span className="sensor-label">Lights</span>
           </div>
-          <div className={`sensor-value yellow alert-value-${getAlertLevel(light, 'light')}`}>
-            {light.toFixed(0)}nits
+          <div className={`sensor-value yellow alert-value-${getAlertLevel(light, SENSOR_THRESHOLDS.light)}`}>
+            {light.toFixed(0)}{SENSOR_RANGES.light.unit}
           </div>
         </div>
 
         <div className="chart-container">
-          {/* Removed stats header to give more space for the chart */}
           <ResponsiveContainer width="100%" height="85%">
             <LineChart data={lightData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d3548" />
@@ -433,10 +247,10 @@ const Home = () => {
               <YAxis 
                 stroke="#6c7a8f" 
                 tick={{ fontSize: 10 }}
-                domain={[0, 4095]}
-                label={{ value: 'nits', angle: 0, position: 'top', offset: 10, style: { fontSize: 10, fill: '#6c7a8f' } }}
+                domain={[SENSOR_RANGES.light.min, SENSOR_RANGES.light.max]}
+                label={{ value: SENSOR_RANGES.light.unit, angle: 0, position: 'top', offset: 10, style: { fontSize: 10, fill: '#6c7a8f' } }}
               />
-              <Tooltip content={(props) => <CustomTooltip {...props} unit=" nits" />} />
+              <Tooltip content={(props) => <CustomTooltip {...props} unit={` ${SENSOR_RANGES.light.unit}`} />} />
               <Line 
                 type="monotone" 
                 dataKey="value" 

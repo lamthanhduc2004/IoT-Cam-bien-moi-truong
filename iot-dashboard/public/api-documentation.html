@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT API Documentation - Lâm Thành Đức</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #1a1a1a;
+            color: #e8e8e8;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar - giống Postman */
+        .sidebar {
+            width: 280px;
+            background: #252526;
+            border-right: 1px solid #3e3e42;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #3e3e42;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            color: #8b8b8b;
+        }
+
+        .folder {
+            margin-top: 8px;
+        }
+
+        .folder-header {
+            padding: 10px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            user-select: none;
+        }
+
+        .folder-header:hover {
+            background: #2d2d30;
+        }
+
+        .folder-icon {
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+
+        .folder.open .folder-icon {
+            transform: rotate(90deg);
+        }
+
+        .folder-content {
+            display: none;
+        }
+
+        .folder.open .folder-content {
+            display: block;
+        }
+
+        .endpoint-item {
+            padding: 8px 20px 8px 48px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #cccccc;
+            transition: all 0.15s;
+        }
+
+        .endpoint-item:hover {
+            background: #2d2d30;
+            color: #fff;
+        }
+
+        .endpoint-item.active {
+            background: #37373d;
+            color: #fff;
+            border-left: 3px solid #ff6c37;
+        }
+
+        .method-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .method-badge.get {
+            background: #49cc90;
+            color: #000;
+        }
+
+        .method-badge.post {
+            background: #ffa500;
+            color: #000;
+        }
+
+        /* Main content - giống Postman */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            background: #252526;
+            border-bottom: 1px solid #3e3e42;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .topbar .method {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .topbar .method.get {
+            background: #49cc90;
+            color: #000;
+        }
+
+        .topbar .method.post {
+            background: #ffa500;
+            color: #000;
+        }
+
+        .topbar .url {
+            flex: 1;
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: #e8e8e8;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            background: #1e1e1e;
+        }
+
+        .tabs {
+            display: flex;
+            background: #252526;
+            border-bottom: 1px solid #3e3e42;
+            padding: 0 24px;
+            gap: 5px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #8b8b8b;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: #e8e8e8;
+        }
+
+        .tab.active {
+            color: #fff;
+            border-bottom-color: #ff6c37;
+        }
+
+        .tab-content {
+            padding: 24px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #252526;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .param-table th {
+            background: #2d2d30;
+            padding: 10px 15px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .param-table td {
+            padding: 12px 15px;
+            border-top: 1px solid #3e3e42;
+            font-size: 13px;
+        }
+
+        .param-name {
+            color: #4fc1ff;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .param-type {
+            color: #b5cea8;
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        .param-required {
+            color: #f48771;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .code-header {
+            background: #2d2d30;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3e3e42;
+        }
+
+        .code-lang {
+            color: #8b8b8b;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: 1px solid #3e3e42;
+            color: #8b8b8b;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #3e3e42;
+            color: #fff;
+        }
+
+        pre {
+            margin: 0;
+            padding: 20px;
+            overflow-x: auto;
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .keyword { color: #569cd6; }
+        .string { color: #ce9178; }
+        .number { color: #b5cea8; }
+        .property { color: #9cdcfe; }
+        .comment { color: #6a9955; }
+        .bracket { color: #ffd700; }
+
+        .info-box {
+            background: #264f78;
+            border-left: 4px solid #3794ff;
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .info-box strong {
+            color: #4fc1ff;
+        }
+
+        .feature-tag {
+            display: inline-block;
+            background: #3e3e42;
+            color: #4fc1ff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 5px 5px 5px 0;
+        }
+
+        .example-item {
+            background: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 6px;
+            padding: 12px 15px;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .example-query {
+            color: #ce9178;
+            font-weight: 600;
+        }
+
+        .example-arrow {
+            color: #8b8b8b;
+            margin: 0 10px;
+        }
+
+        .example-result {
+            color: #9cdcfe;
+        }
+
+        .response-status {
+            display: inline-block;
+            background: #49cc90;
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #424242;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4e4e4e;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">🌡️ IoT API</div>
+                <div class="sidebar-subtitle">Environmental Monitoring v2.0</div>
+            </div>
+
+            <div class="folder open">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span class="folder-icon">▶</span>
+                    <span>System</span>
+                </div>
+                <div class="folder-content">
+                    <div class="endpoint-item active" onclick="showEndpoint('health', this)">
+                        <span class="method-badge get">GET</span>
+                        <span>Health Check</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="folder open">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span class="folder-icon">▶</span>
+                    <span>Device</span>
+                </div>
+                <div class="folder-content">
+                    <div class="endpoint-item" onclick="showEndpoint('device-info', this)">
+                        <span class="method-badge get">GET</span>
+                        <span>Get Device Info</span>
+                    </div>
+                    <div class="endpoint-item" onclick="showEndpoint('device-control', this)">
+                        <span class="method-badge post">POST</span>
+                        <span>Control Device</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="folder open">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span class="folder-icon">▶</span>
+                    <span>Sensor Data</span>
+                </div>
+                <div class="folder-content">
+                    <div class="endpoint-item" onclick="showEndpoint('latest', this)">
+                        <span class="method-badge get">GET</span>
+                        <span>Latest Data</span>
+                    </div>
+                    <div class="endpoint-item" onclick="showEndpoint('series', this)">
+                        <span class="method-badge get">GET</span>
+                        <span>Time Series</span>
+                    </div>
+                    <div class="endpoint-item" onclick="showEndpoint('sensors', this)">
+                        <span class="method-badge get">GET</span>
+                        <span>All Sensors</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="folder open">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span class="folder-icon">▶</span>
+                    <span>Action History</span>
+                </div>
+                <div class="folder-content">
+                    <div class="endpoint-item" onclick="showEndpoint('actions', this)">
+                        <span class="method-badge get">GET</span>
+                        <span>Get Actions</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="folder open">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span class="folder-icon">▶</span>
+                    <span>Documentation</span>
+                </div>
+                <div class="folder-content">
+                    <div class="endpoint-item" onclick="showEndpoint('smart-search', this)">
+                        <span class="method-badge get">📖</span>
+                        <span>Smart Search Guide</span>
+                    </div>
+                    <div class="endpoint-item" onclick="showEndpoint('architecture', this)">
+                        <span class="method-badge get">🏗️</span>
+                        <span>Architecture</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Topbar -->
+            <div class="topbar">
+                <span class="method get" id="current-method">GET</span>
+                <input type="text" class="url" id="current-url" value="http://localhost:3000/api/health" readonly>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('params', this)">Params</div>
+                <div class="tab" onclick="switchTab('body', this)">Body</div>
+                <div class="tab" onclick="switchTab('response', this)">Response</div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area" id="content-area">
+                <!-- Content will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const endpoints = {
+            'health': {
+                method: 'GET',
+                url: '/api/health',
+                description: 'Kiểm tra trạng thái server và kết nối MQTT',
+                params: [],
+                body: null,
+                response: `{
+  <span class="property">"status"</span>: <span class="string">"ok"</span>,
+  <span class="property">"mqtt"</span>: <span class="string">"connected"</span>,
+  <span class="property">"timestamp"</span>: <span class="string">"2025-10-09T21:11:00.616Z"</span>
+}`
+            },
+            'device-info': {
+                method: 'GET',
+                url: '/api/devices/:id',
+                description: 'Lấy thông tin tổng quan về device',
+                params: [
+                    { name: 'id', type: 'string', location: 'path', required: true, description: 'Device ID (e.g., esp32_01)' }
+                ],
+                body: null,
+                response: `{
+  <span class="property">"device_id"</span>: <span class="string">"esp32_01"</span>,
+  <span class="property">"total_records"</span>: <span class="number">45230</span>,
+  <span class="property">"last_seen"</span>: <span class="string">"2025-10-09T21:11:09.000Z"</span>
+}`
+            },
+            'latest': {
+                method: 'GET',
+                url: '/api/devices/:id/last',
+                description: 'Lấy dữ liệu cảm biến mới nhất (realtime)',
+                params: [
+                    { name: 'id', type: 'string', location: 'path', required: true, description: 'Device ID' }
+                ],
+                body: null,
+                response: `{
+  <span class="property">"device_id"</span>: <span class="string">"esp32_01"</span>,
+  <span class="property">"timestamp"</span>: <span class="string">"2025-10-09T21:11:09.000Z"</span>,
+  <span class="property">"temperature"</span>: { <span class="property">"value"</span>: <span class="number">31.3</span>, <span class="property">"unit"</span>: <span class="string">"°C"</span> },
+  <span class="property">"humidity"</span>: { <span class="property">"value"</span>: <span class="number">61</span>, <span class="property">"unit"</span>: <span class="string">"%"</span> },
+  <span class="property">"light"</span>: { <span class="property">"value"</span>: <span class="number">673</span>, <span class="property">"unit"</span>: <span class="string">"nits"</span> }
+}`
+            },
+            'series': {
+                method: 'GET',
+                url: '/api/devices/:id/series',
+                description: 'Lấy dữ liệu time series cho biểu đồ',
+                params: [
+                    { name: 'id', type: 'string', location: 'path', required: true, description: 'Device ID' },
+                    { name: 'from', type: 'string', location: 'query', required: false, description: 'Period: "today", "1hour", "24hour" (default: "1hour")' },
+                    { name: 'sensor', type: 'string', location: 'query', required: false, description: 'Sensor type: "temperature", "humidity", "light", "all"' },
+                    { name: 'limit', type: 'number', location: 'query', required: false, description: 'Max records (default: 5000)' }
+                ],
+                body: null,
+                response: `{
+  <span class="property">"device_id"</span>: <span class="string">"esp32_01"</span>,
+  <span class="property">"sensor"</span>: <span class="string">"temperature"</span>,
+  <span class="property">"period"</span>: <span class="string">"today"</span>,
+  <span class="property">"data"</span>: [
+    {
+      <span class="property">"sensor_type"</span>: <span class="string">"temperature"</span>,
+      <span class="property">"value"</span>: <span class="number">31.3</span>,
+      <span class="property">"unit"</span>: <span class="string">"°C"</span>,
+      <span class="property">"timestamp"</span>: <span class="string">"2025-10-09T02:00:00.000Z"</span>
+    }
+  ]
+}`
+            },
+            'sensors': {
+                method: 'GET',
+                url: '/api/devices/:id/sensors',
+                description: 'Lấy dữ liệu cảm biến với pagination, sorting và smart search',
+                features: ['Smart Search', 'Backend Sorting', 'Date Filter', 'Pagination'],
+                params: [
+                    { name: 'id', type: 'string', location: 'path', required: true, description: 'Device ID' },
+                    { name: 'page', type: 'number', location: 'query', required: false, description: 'Page number (default: 1)' },
+                    { name: 'limit', type: 'number', location: 'query', required: false, description: 'Items per page: 5, 10, 20, 50' },
+                    { name: 'search', type: 'string', location: 'query', required: false, description: 'Smart search query (see Smart Search Guide)' },
+                    { name: 'filter', type: 'string', location: 'query', required: false, description: 'Filter: "All", "Temperature", "Humidity", "Light"' },
+                    { name: 'orderBy', type: 'string', location: 'query', required: false, description: 'Sort column: "timestamp", "temperature", "humidity", "light"' },
+                    { name: 'orderDir', type: 'string', location: 'query', required: false, description: 'Sort direction: "ASC", "DESC"' },
+                    { name: 'date', type: 'string', location: 'query', required: false, description: 'Filter by date: YYYY-MM-DD format' }
+                ],
+                body: null,
+                response: `{
+  <span class="property">"data"</span>: [
+    {
+      <span class="property">"id"</span>: <span class="string">"93187"</span>,
+      <span class="property">"timestamp"</span>: <span class="string">"2025-10-09T21:11:18.000Z"</span>,
+      <span class="property">"temperature"</span>: <span class="number">31.3</span>,
+      <span class="property">"humidity"</span>: <span class="number">61</span>,
+      <span class="property">"light"</span>: <span class="number">616</span>
+    }
+  ],
+  <span class="property">"total"</span>: <span class="number">1520</span>,
+  <span class="property">"page"</span>: <span class="number">1</span>,
+  <span class="property">"limit"</span>: <span class="number">10</span>,
+  <span class="property">"date"</span>: <span class="string">"2025-10-09"</span>
+}`
+            },
+            'actions': {
+                method: 'GET',
+                url: '/api/devices/:id/actions',
+                description: 'Lấy lịch sử điều khiển thiết bị với pagination và smart search',
+                features: ['Smart Search', 'Backend Sorting', 'Device Filter', 'Pagination'],
+                params: [
+                    { name: 'id', type: 'string', location: 'path', required: true, description: 'Device ID' },
+                    { name: 'page', type: 'number', location: 'query', required: false, description: 'Page number' },
+                    { name: 'limit', type: 'number', location: 'query', required: false, description: 'Items per page' },
+                    { name: 'search', type: 'string', location: 'query', required: false, description: 'Smart search query' },
+                    { name: 'filter', type: 'string', location: 'query', required: false, description: 'Device filter: "All", "Fan", "AC", "LED"' },
+                    { name: 'orderBy', type: 'string', location: 'query', required: false, description: 'Sort column' },
+                    { name: 'orderDir', type: 'string', location: 'query', required: false, description: 'Sort direction' },
+                    { name: 'date', type: 'string', location: 'query', required: false, description: 'Filter by date' }
+                ],
+                body: null,
+                response: `{
+  <span class="property">"data"</span>: [
+    {
+      <span class="property">"id"</span>: <span class="string">"286"</span>,
+      <span class="property">"device_id"</span>: <span class="string">"esp32_01"</span>,
+      <span class="property">"target"</span>: <span class="string">"led"</span>,
+      <span class="property">"action"</span>: <span class="string">"OFF"</span>,
+      <span class="property">"issued_by"</span>: <span class="string">"web-user"</span>,
+      <span class="property">"result"</span>: <span class="string">"success"</span>,
+      <span class="property">"timestamp"</span>: <span class="string">"2025-10-09T20:59:15.002Z"</span>
+    }
+  ],
+  <span class="property">"total"</span>: <span class="number">125</span>,
+  <span class="property">"page"</span>: <span class="number">1</span>,
+  <span class="property">"limit"</span>: <span class="number">10</span>
+}`
+            },
+            'device-control': {
+                method: 'POST',
+                url: '/api/devices/:id/cmd/:target',
+                description: 'Gửi lệnh điều khiển thiết bị qua MQTT',
+                params: [
+                    { name: 'id', type: 'string', location: 'path', required: true, description: 'Device ID' },
+                    { name: 'target', type: 'string', location: 'path', required: true, description: 'Target device: "led", "fan", "ac"' }
+                ],
+                body: `{
+  <span class="property">"value"</span>: <span class="string">"ON"</span>,        <span class="comment">// "ON" | "OFF" | "TOGGLE"</span>
+  <span class="property">"issued_by"</span>: <span class="string">"web-user"</span> <span class="comment">// Optional, default: "api"</span>
+}`,
+                response: `{
+  <span class="property">"ok"</span>: <span class="keyword">true</span>,
+  <span class="property">"device"</span>: <span class="string">"esp32_01"</span>,
+  <span class="property">"target"</span>: <span class="string">"led"</span>,
+  <span class="property">"value"</span>: <span class="string">"ON"</span>,
+  <span class="property">"issued_by"</span>: <span class="string">"web-user"</span>,
+  <span class="property">"timestamp"</span>: <span class="string">"2025-10-09T21:15:30.123Z"</span>
+}`
+            },
+            'smart-search': {
+                method: 'GET',
+                url: null,
+                description: 'Hướng dẫn sử dụng Smart Search',
+                isDoc: true,
+                content: `
+                    <div class="section">
+                        <div class="section-title">🔍 Smart Search - Sensor Data</div>
+                        <p style="color: #8b8b8b; margin-bottom: 20px;">API hỗ trợ tìm kiếm thông minh với nhiều format khác nhau:</p>
+                        
+                        <div class="example-item">
+                            <span class="example-query">"22:47"</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Tìm tất cả data trong phút 22:47 (22:47:00 - 22:47:59)</span>
+                        </div>
+                        
+                        <div class="example-item">
+                            <span class="example-query">"22:47:30"</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Tìm data trong giây cụ thể</span>
+                        </div>
+                        
+                        <div class="example-item">
+                            <span class="example-query">"23:38 9/10/2025"</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Tìm theo full datetime (HH:MM DD/MM/YYYY)</span>
+                        </div>
+                        
+                        <div class="example-item">
+                            <span class="example-query">"28"</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Tìm nhiệt độ 28.0-28.9°C VÀ độ ẩm 28.0-28.9% (2 digits)</span>
+                        </div>
+                        
+                        <div class="example-item">
+                            <span class="example-query">"500"</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Tìm ánh sáng 500-599 nits (3+ digits)</span>
+                        </div>
+                        
+                        <div class="example-item">
+                            <span class="example-query">"28" + filter=Temperature</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Chỉ tìm nhiệt độ 28.0-28.9°C</span>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">🔍 Smart Search - Action History</div>
+                        
+                        <div class="example-item">
+                            <span class="example-query">"22:10"</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Tìm actions trong phút 22:10</span>
+                        </div>
+                        
+                        <div class="example-item">
+                            <span class="example-query">"led"</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Text search trong device name và action</span>
+                        </div>
+                        
+                        <div class="example-item">
+                            <span class="example-query">"ON"</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Tìm tất cả actions bật thiết bị</span>
+                        </div>
+                    </div>
+                `
+            },
+            'architecture': {
+                method: 'GET',
+                url: null,
+                description: 'Kiến trúc hệ thống',
+                isDoc: true,
+                content: `
+                    <div class="info-box">
+                        <strong>Base URL:</strong> http://localhost:3000/api<br>
+                        <strong>Device ID:</strong> esp32_01<br>
+                        <strong>Author:</strong> Lâm Thành Đức - B22DCCN227<br>
+                        <strong>Tech Stack:</strong> Node.js + Express + PostgreSQL + MQTT
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">🏗️ Backend Architecture</div>
+                        <div class="code-block">
+                            <pre>server/
+├── src/
+│   ├── config/        <span class="comment">// Database & MQTT config</span>
+│   ├── models/        <span class="comment">// Data access layer</span>
+│   ├── controllers/   <span class="comment">// Business logic</span>
+│   ├── routes/        <span class="comment">// API routes</span>
+│   ├── services/      <span class="comment">// MQTT service</span>
+│   └── middleware/    <span class="comment">// Error handling</span>
+└── index.js           <span class="comment">// Entry point (75 lines)</span></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">⚡ Performance Optimizations</div>
+                        <p style="color: #8b8b8b; margin-bottom: 15px;">
+                            <span class="feature-tag">Index-based filtering</span>
+                            <span class="feature-tag">Range queries</span>
+                            <span class="feature-tag">Data retention (30 days)</span>
+                            <span class="feature-tag">Duplicate prevention</span>
+                        </p>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">📡 MQTT Topics</div>
+                        <div class="example-item">
+                            <span class="example-query">iot/{device_id}/telemetry</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Publish sensor data (every 2s)</span>
+                        </div>
+                        <div class="example-item">
+                            <span class="example-query">iot/{device_id}/led/command</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Control LED</span>
+                        </div>
+                        <div class="example-item">
+                            <span class="example-query">iot/{device_id}/fan/command</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Control Fan</span>
+                        </div>
+                        <div class="example-item">
+                            <span class="example-query">iot/{device_id}/ac/command</span>
+                            <span class="example-arrow">→</span>
+                            <span class="example-result">Control AC</span>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        let currentTab = 'params';
+
+        function toggleFolder(element) {
+            element.parentElement.classList.toggle('open');
+        }
+
+        function showEndpoint(key, element) {
+            // Update active state
+            document.querySelectorAll('.endpoint-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            const endpoint = endpoints[key];
+            
+            // Update topbar
+            if (endpoint.url) {
+                document.getElementById('current-method').textContent = endpoint.method;
+                document.getElementById('current-method').className = 'method ' + endpoint.method.toLowerCase();
+                document.getElementById('current-url').value = 'http://localhost:3000' + endpoint.url;
+            } else {
+                document.getElementById('current-method').textContent = '📖';
+                document.getElementById('current-url').value = endpoint.description;
+            }
+
+            // Reset to params tab
+            currentTab = 'params';
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab')[0].classList.add('active');
+
+            renderContent(key);
+        }
+
+        function switchTab(tab, element) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            
+            const activeEndpoint = document.querySelector('.endpoint-item.active');
+            if (activeEndpoint) {
+                const key = Array.from(document.querySelectorAll('.endpoint-item')).indexOf(activeEndpoint);
+                const endpointKey = Object.keys(endpoints)[key];
+                renderContent(endpointKey);
+            }
+        }
+
+        function renderContent(key) {
+            const endpoint = endpoints[key];
+            const content = document.getElementById('content-area');
+
+            if (endpoint.isDoc) {
+                content.innerHTML = `<div class="tab-content">${endpoint.content}</div>`;
+                return;
+            }
+
+            let html = '<div class="tab-content">';
+
+            if (currentTab === 'params') {
+                if (endpoint.features) {
+                    html += '<div style="margin-bottom: 20px;">';
+                    endpoint.features.forEach(f => {
+                        html += `<span class="feature-tag">${f}</span>`;
+                    });
+                    html += '</div>';
+                }
+
+                if (endpoint.params && endpoint.params.length > 0) {
+                    html += '<div class="section"><div class="section-title">Parameters</div>';
+                    html += '<table class="param-table"><thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Description</th></tr></thead><tbody>';
+                    endpoint.params.forEach(param => {
+                        html += `<tr>
+                            <td><span class="param-name">${param.name}</span>${param.required ? '<span class="param-required">required</span>' : ''}</td>
+                            <td><span class="param-type">${param.type}</span></td>
+                            <td>${param.location}</td>
+                            <td style="color: #8b8b8b;">${param.description}</td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                } else {
+                    html += '<p style="color: #8b8b8b;">No parameters required.</p>';
+                }
+            } else if (currentTab === 'body') {
+                if (endpoint.body) {
+                    html += `<div class="section">
+                        <div class="section-title">Request Body</div>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">JSON</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <pre>${endpoint.body}</pre>
+                        </div>
+                    </div>`;
+                } else {
+                    html += '<p style="color: #8b8b8b;">No request body required.</p>';
+                }
+            } else if (currentTab === 'response') {
+                html += `<div class="section">
+                    <span class="response-status">200 OK</span>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-lang">JSON</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <pre>${endpoint.response}</pre>
+                    </div>
+                </div>`;
+            }
+
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        function copyCode(button) {
+            const pre = button.closest('.code-block').querySelector('pre');
+            const text = pre.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => button.textContent = 'Copy', 2000);
+            });
+        }
+
+        // Initialize with first endpoint
+        showEndpoint('health', document.querySelector('.endpoint-item'));
+    </script>
+</body>
+</html>
