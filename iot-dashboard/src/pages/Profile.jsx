@@ -39,12 +39,14 @@ const Profile = () => {
             <span>Lam Thanh Duc</span>
           </a>
 
-          <a href="/docs/SRS_IoT_Demo.docx" download className="profile-link">
+          <a href="https://github.com/lamthanhduc2004/IoT-Cam-bien-moi-truong/blob/main/docs/SRS_IoT_Demo.docx" 
+             target="_blank" rel="noopener noreferrer" className="profile-link">
             <FaFilePdf className="link-icon" />
-            <span>Download PDF</span>
+            <span>Download SRS Document</span>
           </a>
 
-          <a href="https://documenter.getpostman.com/view/42122897/2sB3QKrVjN" target="_blank" rel="noopener noreferrer" className="profile-link">
+          <a href="https://documenter.getpostman.com/view/42122897/2sB3QKrVjN" 
+             target="_blank" rel="noopener noreferrer" className="profile-link">
             <FaBook className="link-icon" />
             <span>API Documentation</span>
           </a>

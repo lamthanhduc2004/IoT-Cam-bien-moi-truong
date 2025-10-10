@@ -30,7 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # MQTT passwords (sensitive)
-passwdfile
+mqtt-broker/passwdfile
 
 # Local test files
 *.local

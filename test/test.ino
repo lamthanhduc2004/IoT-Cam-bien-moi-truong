@@ -44,12 +44,22 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("\nWiFi OK!");
+  Serial.print("ESP32 IP: ");
+  Serial.println(WiFi.localIP());
+  Serial.print("Gateway (PC Hotspot): ");
+  Serial.println(WiFi.gatewayIP());
   
   // Kết nối MQTT
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setCallback(onMessage);
   
   while (!mqttClient.connected()) {
+    Serial.print("Connecting to MQTT broker at ");
+    Serial.print(MQTT_HOST);
+    Serial.print(":");
+    Serial.print(MQTT_PORT);
+    Serial.println("...");
+    
     if (mqttClient.connect("esp32_01", MQTT_USER, MQTT_PASSWORD)) {
       Serial.println("MQTT OK!");
       mqttClient.subscribe(LED_CMD);
@@ -60,7 +70,10 @@ void setup() {
       Serial.print("Initial LED Status: ");
       Serial.println(initialStatus);
     } else {
-      delay(1000);
+      Serial.print("MQTT Connection FAILED! State: ");
+      Serial.println(mqttClient.state());
+      Serial.println("Error codes: -4=timeout, -3=lost, -2=failed, -1=disconnected, 0=ok");
+      delay(2000);
     }
   }
   
@@ -119,17 +132,7 @@ void onMessage(char* topic, byte* payload, unsigned int length) {
 void sendData() {
   float temp = dht.readTemperature();
   float hum = dht.readHumidity();
-  
-  // ========================================
-  // XỬ LÝ CẢM BIẾN ÁNH SÁNG (SIGNAL CONDITIONING)
-  // ========================================
-  // Module MH-Sensor Flying-Fish chỉ có digital output (HIGH/LOW)
-  // HIGH (~4095) = không kích hoạt (ánh sáng bình thường)
-  // LOW (~0-100) = có kích hoạt (có thay đổi ánh sáng)
-  // 
-  // Kỹ thuật áp dụng: Signal conditioning & range mapping
-  // Tương tự: ADC scaling, Kalman filtering, Data normalization
-  
+
   int rawLight = analogRead(LIGHT_PIN);
   int light;
   
