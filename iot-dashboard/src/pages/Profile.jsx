@@ -1,4 +1,4 @@
-import { FaEnvelope, FaPhone, FaGithub, FaBook } from 'react-icons/fa';
+import { FaEnvelope, FaPhone, FaGithub, FaFilePdf, FaBook } from 'react-icons/fa';
 import './Profile.css';
 
 const Profile = () => {
@@ -37,6 +37,12 @@ const Profile = () => {
           <a href="https://github.com/lamthanhduc2004/IoT-Cam-bien-moi-truong" target="_blank" rel="noopener noreferrer" className="profile-link">
             <FaGithub className="link-icon" />
             <span>Lam Thanh Duc</span>
+          </a>
+
+          <a href="/IOT_LamThanhDuc_B22DCCN227.pdf" 
+             download="IOT_LamThanhDuc_B22DCCN227.pdf" className="profile-link">
+            <FaFilePdf className="link-icon" />
+            <span>Download PDF</span>
           </a>
 
           <a href="https://documenter.getpostman.com/view/42122897/2sB3QNr96U" 
