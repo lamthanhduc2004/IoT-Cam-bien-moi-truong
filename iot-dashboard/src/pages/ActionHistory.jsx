@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FaChevronLeft, FaChevronRight, FaCalendar } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaCalendar, FaFilter } from 'react-icons/fa';
 import apiService from '../services/api';
 import { PAGINATION, DATE_FORMAT } from '../config/constants';
 import './ActionHistory.css';
@@ -16,6 +16,11 @@ const ActionHistory = () => {
   const [orderBy, setOrderBy] = useState('timestamp');
   const [orderDir, setOrderDir] = useState('DESC');
   const [sortState, setSortState] = useState({});
+  
+  const [deviceFilter, setDeviceFilter] = useState('All');
+  const [actionFilter, setActionFilter] = useState('All');
+  const [showDeviceDropdown, setShowDeviceDropdown] = useState(false);
+  const [showActionDropdown, setShowActionDropdown] = useState(false);
 
   const getTodayDate = useCallback(() => {
     const today = new Date();
@@ -42,13 +47,36 @@ const ActionHistory = () => {
   }, [selectedDate, isManualDateSelection, getTodayDate]);
 
   useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.th-with-filter')) {
+        setShowDeviceDropdown(false);
+        setShowActionDropdown(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      
+      let combinedFilter = filterType;
+      if (deviceFilter !== 'All') {
+        combinedFilter = deviceFilter.toLowerCase();
+      }
+      
+      let combinedSearch = searchTerm;
+      if (actionFilter !== 'All' && !searchTerm) {
+        combinedSearch = actionFilter;
+      }
+      
       const result = await apiService.getActions(
         currentPage,
         itemsPerPage,
-        searchTerm,
-        filterType,
+        combinedSearch,
+        combinedFilter,
         orderBy,
         orderDir,
         selectedDate
@@ -74,7 +102,7 @@ const ActionHistory = () => {
     };
 
     fetchData();
-  }, [currentPage, itemsPerPage, searchTerm, filterType, orderBy, orderDir, selectedDate]);
+  }, [currentPage, itemsPerPage, searchTerm, filterType, orderBy, orderDir, selectedDate, deviceFilter, actionFilter]);
 
   const handleSearch = useCallback(() => {
     setSearchTerm(searchInput);
@@ -139,6 +167,18 @@ const ActionHistory = () => {
 
   const handleCopyTime = useCallback((time) => {
     navigator.clipboard.writeText(time);
+  }, []);
+
+  const handleDeviceFilter = useCallback((device) => {
+    setDeviceFilter(device);
+    setShowDeviceDropdown(false);
+    setCurrentPage(1);
+  }, []);
+
+  const handleActionFilter = useCallback((action) => {
+    setActionFilter(action);
+    setShowActionDropdown(false);
+    setCurrentPage(1);
   }, []);
 
   const getPageNumbers = useCallback(() => {
@@ -230,14 +270,82 @@ const ActionHistory = () => {
             <thead>
               <tr>
                 <th style={{ cursor: 'default' }}>STT</th>
-                <th onClick={() => handleSort('target')} style={{ cursor: 'pointer' }}>
-                  Device {sortState['target'] === 'ASC' ? '↑' : sortState['target'] === 'DESC' ? '↓' : ''}
+                <th className="th-with-filter">
+                  <div className="th-content">
+                    <span 
+                      className="th-text"
+                      onClick={() => setShowDeviceDropdown(!showDeviceDropdown)}
+                    >
+                      Device 
+                      {deviceFilter !== 'All' && <span className="filter-badge">{deviceFilter}</span>}
+                      <FaFilter className="filter-icon" />
+                    </span>
+                  </div>
+                  {showDeviceDropdown && (
+                    <div className="filter-dropdown">
+                      <div 
+                        className={`dropdown-item ${deviceFilter === 'All' ? 'active' : ''}`}
+                        onClick={() => handleDeviceFilter('All')}
+                      >
+                        All Devices
+                      </div>
+                      <div 
+                        className={`dropdown-item ${deviceFilter === 'LED' ? 'active' : ''}`}
+                        onClick={() => handleDeviceFilter('LED')}
+                      >
+                        LED
+                      </div>
+                      <div 
+                        className={`dropdown-item ${deviceFilter === 'FAN' ? 'active' : ''}`}
+                        onClick={() => handleDeviceFilter('FAN')}
+                      >
+                        FAN
+                      </div>
+                      <div 
+                        className={`dropdown-item ${deviceFilter === 'AC' ? 'active' : ''}`}
+                        onClick={() => handleDeviceFilter('AC')}
+                      >
+                        AC
+                      </div>
+                    </div>
+                  )}
                 </th>
-                <th onClick={() => handleSort('action')} style={{ cursor: 'pointer' }}>
-                  Action {sortState['action'] === 'ASC' ? '↑' : sortState['action'] === 'DESC' ? '↓' : ''}
+                <th className="th-with-filter">
+                  <div className="th-content">
+                    <span 
+                      className="th-text"
+                      onClick={() => setShowActionDropdown(!showActionDropdown)}
+                    >
+                      Action 
+                      {actionFilter !== 'All' && <span className="filter-badge">{actionFilter}</span>}
+                      <FaFilter className="filter-icon" />
+                    </span>
+                  </div>
+                  {showActionDropdown && (
+                    <div className="filter-dropdown">
+                      <div 
+                        className={`dropdown-item ${actionFilter === 'All' ? 'active' : ''}`}
+                        onClick={() => handleActionFilter('All')}
+                      >
+                        All Actions
+                      </div>
+                      <div 
+                        className={`dropdown-item ${actionFilter === 'ON' ? 'active' : ''}`}
+                        onClick={() => handleActionFilter('ON')}
+                      >
+                        ON
+                      </div>
+                      <div 
+                        className={`dropdown-item ${actionFilter === 'OFF' ? 'active' : ''}`}
+                        onClick={() => handleActionFilter('OFF')}
+                      >
+                        OFF
+                      </div>
+                    </div>
+                  )}
                 </th>
                 <th onClick={() => handleSort('timestamp')} style={{ cursor: 'pointer' }}>
-                  Time {sortState['timestamp'] === 'ASC' ? '↑' : sortState['timestamp'] === 'DESC' ? '↓' : ''}
+                  Time {sortState['timestamp'] === 'ASC' ? '↑' : sortState['timestamp'] === 'DESC' ? '↓' : '⇅'}
                 </th>
               </tr>
             </thead>

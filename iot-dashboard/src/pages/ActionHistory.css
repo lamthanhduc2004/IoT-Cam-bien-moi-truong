@@ -136,6 +136,101 @@
   font-weight: 600;
   color: white;
   border-bottom: 2px solid #4a5178;
+  position: relative;
+}
+
+.th-with-filter {
+  cursor: default !important;
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.th-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.th-text:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.filter-icon {
+  font-size: 12px;
+  color: #00b4d8;
+}
+
+.filter-badge {
+  background: #00b4d8;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.sort-icon {
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+  font-size: 14px;
+  color: #6c7a8f;
+}
+
+.sort-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.filter-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+  background: #2d3548;
+  border: 2px solid #4a5178;
+  border-radius: 8px;
+  z-index: 1000;
+  min-width: 150px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  text-align: left;
+  color: white;
+}
+
+.dropdown-item:first-child {
+  border-radius: 6px 6px 0 0;
+}
+
+.dropdown-item:last-child {
+  border-radius: 0 0 6px 6px;
+}
+
+.dropdown-item:hover {
+  background: #3d4558;
+}
+
+.dropdown-item.active {
+  background: #00b4d8;
+  color: white;
+  font-weight: 600;
 }
 
 .data-table td {

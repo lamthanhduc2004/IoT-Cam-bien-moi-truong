@@ -79,7 +79,7 @@ class ApiService {
     }
   }
 
-  async controlDevice(target, value, issued_by = 'web') {
+  async controlDevice(target, value, issued_by = 'web', signal = null) {
     try {
       const response = await fetch(
         `${API_BASE_URL}/devices/${DEVICE_ID}/cmd/${target}`,
@@ -89,12 +89,18 @@ class ApiService {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ value, issued_by }),
+          signal: signal
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       return await response.json();
     } catch (error) {
       console.error('Control device failed:', error);
-      return { ok: false, error: error.message };
+      throw error; // Re-throw để Home.jsx catch được
     }
   }
 

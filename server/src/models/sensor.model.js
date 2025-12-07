@@ -115,7 +115,9 @@ export const getSensorsWithFilters = async (deviceId, page, limit, search, filte
           timestamp,
           MAX(CASE WHEN sensor_type = 'temperature' THEN value END) as temperature,
           MAX(CASE WHEN sensor_type = 'humidity' THEN value END) as humidity,
-          MAX(CASE WHEN sensor_type = 'light' THEN value END) as light
+          MAX(CASE WHEN sensor_type = 'light' THEN value END) as light,
+          MAX(CASE WHEN sensor_type = 'rainfall' THEN value END) as rainfall,
+          MAX(CASE WHEN sensor_type = 'wind_speed' THEN value END) as wind_speed
         FROM data_sensor
         WHERE ${whereConditions.join(' AND ')}
         GROUP BY timestamp
@@ -123,7 +125,6 @@ export const getSensorsWithFilters = async (deviceId, page, limit, search, filte
       SELECT * FROM grouped_data
     `;
     
-    let customOrderBy = null;
     let hasSearchCondition = false;
     
     // Smart search logic
@@ -171,48 +172,38 @@ export const getSensorsWithFilters = async (deviceId, page, limit, search, filte
         }
         hasSearchCondition = true;
       }
-      else if (/^\d{2}$/.test(search)) {
+      else if (/^\d+$/.test(search)) {
         const num = parseInt(search);
         
+        // Biên độ cho khoảng tìm kiếm theo số: nhiệt/ẩm +-1, ánh sáng theo thang phù hợp
         if (filter === 'Temperature') {
           searchConditions.push(`temperature >= $${params.length + 1} AND temperature < $${params.length + 2}`);
           params.push(num, num + 1);
-          customOrderBy = 'temperature ASC';
           hasSearchCondition = true;
         } else if (filter === 'Humidity') {
           searchConditions.push(`humidity >= $${params.length + 1} AND humidity < $${params.length + 2}`);
           params.push(num, num + 1);
-          customOrderBy = 'humidity ASC';
+          hasSearchCondition = true;
+        } else if (filter === 'Light') {
+          // Nếu số nhỏ (<100) coi là tìm dải nhỏ (vd 30-50); số lớn dùng cửa sổ rộng hơn
+          const delta = num < 100 ? 20 : 100;
+          searchConditions.push(`light >= $${params.length + 1} AND light < $${params.length + 2}`);
+          params.push(Math.max(0, num - (num < 100 ? 0 : 0)), num + delta);
+          hasSearchCondition = true;
+        } else if (filter === 'Rainfall') {
+          // Search theo hàng chục: 10 → 10-19.99, 20 → 20-29.99, 50 → 50-59.99
+          searchConditions.push(`rainfall >= $${params.length + 1} AND rainfall < $${params.length + 2}`);
+          params.push(num, num + 10);
+          hasSearchCondition = true;
+        } else if (filter === 'Wind_speed') {
+          // Search theo hàng chục: 10 → 10-19.99, 20 → 20-29.99, 30 → 30-39.99
+          searchConditions.push(`wind_speed >= $${params.length + 1} AND wind_speed < $${params.length + 2}`);
+          params.push(num, num + 10);
           hasSearchCondition = true;
         } else if (filter === 'All') {
-          searchConditions.push(`(temperature >= $${params.length + 1} AND temperature < $${params.length + 2}) OR (humidity >= $${params.length + 1} AND humidity < $${params.length + 2})`);
-          params.push(num, num + 1);
-          customOrderBy = `
-            CASE 
-              WHEN temperature >= ${num} AND temperature < ${num + 1} THEN 1
-              WHEN humidity >= ${num} AND humidity < ${num + 1} THEN 2
-              ELSE 3
-            END, temperature ASC, humidity ASC
-          `;
-          hasSearchCondition = true;
-        }
-      }
-      else if (/^\d{3,}$/.test(search)) {
-        const num = parseInt(search);
-        
-        if (filter === 'Light' || filter === 'All') {
-          searchConditions.push(`light >= $${params.length + 1} AND light < $${params.length + 2}`);
-          params.push(num, num + 100);
-          customOrderBy = 'light ASC';
-          hasSearchCondition = true;
-        } else if (filter === 'Temperature' || filter === 'Humidity') {
-          const searchParam = `$${params.length + 1}`;
-          if (filter === 'Temperature') {
-            searchConditions.push(`CAST(temperature AS TEXT) LIKE ${searchParam}`);
-          } else if (filter === 'Humidity') {
-            searchConditions.push(`CAST(humidity AS TEXT) LIKE ${searchParam}`);
-          }
-          params.push(`%${search}%`);
+          const deltaLight = num < 100 ? 20 : 100;
+          searchConditions.push(`(temperature >= $${params.length + 1} AND temperature < $${params.length + 2}) OR (humidity >= $${params.length + 3} AND humidity < $${params.length + 4}) OR (light >= $${params.length + 5} AND light < $${params.length + 6}) OR (rainfall >= $${params.length + 7} AND rainfall < $${params.length + 8}) OR (wind_speed >= $${params.length + 9} AND wind_speed < $${params.length + 10})`);
+          params.push(num, num + 1, num, num + 1, num, num + deltaLight, num, num + 10, num, num + 10);
           hasSearchCondition = true;
         }
       }
@@ -225,10 +216,16 @@ export const getSensorsWithFilters = async (deviceId, page, limit, search, filte
           searchConditions.push(`CAST(humidity AS TEXT) LIKE ${searchParam}`);
         } else if (filter === 'Light') {
           searchConditions.push(`CAST(light AS TEXT) LIKE ${searchParam}`);
+        } else if (filter === 'Rainfall') {
+          searchConditions.push(`CAST(rainfall AS TEXT) LIKE ${searchParam}`);
+        } else if (filter === 'Wind_speed') {
+          searchConditions.push(`CAST(wind_speed AS TEXT) LIKE ${searchParam}`);
         } else {
           searchConditions.push(`CAST(temperature AS TEXT) LIKE ${searchParam}`);
           searchConditions.push(`CAST(humidity AS TEXT) LIKE ${searchParam}`);
           searchConditions.push(`CAST(light AS TEXT) LIKE ${searchParam}`);
+          searchConditions.push(`CAST(rainfall AS TEXT) LIKE ${searchParam}`);
+          searchConditions.push(`CAST(wind_speed AS TEXT) LIKE ${searchParam}`);
         }
         params.push(`%${search}%`);
         hasSearchCondition = true;
@@ -248,6 +245,10 @@ export const getSensorsWithFilters = async (deviceId, page, limit, search, filte
         filterConditions.push('humidity IS NOT NULL');
       } else if (filter === 'Light') {
         filterConditions.push('light IS NOT NULL');
+      } else if (filter === 'Rainfall') {
+        filterConditions.push('rainfall IS NOT NULL');
+      } else if (filter === 'Wind_speed') {
+        filterConditions.push('wind_speed IS NOT NULL');
       }
       
       if (filterConditions.length > 0) {
@@ -263,16 +264,13 @@ export const getSensorsWithFilters = async (deviceId, page, limit, search, filte
     const countQuery = `SELECT COUNT(*) FROM (${baseQuery}) as counted`;
     const { rows: countRows } = await pool.query(countQuery, params);
     
-    // Apply sorting
-    if (customOrderBy) {
-      baseQuery += ` ORDER BY ${customOrderBy}`;
-    } else {
-      const validColumns = ['id', 'timestamp', 'temperature', 'humidity', 'light'];
-      const validDirs = ['ASC', 'DESC'];
-      const safeOrderBy = validColumns.includes(orderBy) ? orderBy : 'timestamp';
-      const safeOrderDir = validDirs.includes(orderDir.toUpperCase()) ? orderDir.toUpperCase() : 'DESC';
-      baseQuery += ` ORDER BY ${safeOrderBy} ${safeOrderDir}`;
-    }
+    // Apply sorting - LUÔN ưu tiên sorting từ user (click header)
+    const validColumns = ['id', 'timestamp', 'temperature', 'humidity', 'light', 'rainfall', 'wind_speed'];
+    const validDirs = ['ASC', 'DESC'];
+    
+    const safeOrderBy = validColumns.includes(orderBy) ? orderBy : 'timestamp';
+    const safeOrderDir = validDirs.includes(orderDir.toUpperCase()) ? orderDir.toUpperCase() : 'DESC';
+    baseQuery += ` ORDER BY ${safeOrderBy} ${safeOrderDir}`;
     
     // Pagination
     const offset = (page - 1) * limit;

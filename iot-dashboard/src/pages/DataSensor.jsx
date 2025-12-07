@@ -61,6 +61,8 @@ const DataSensor = () => {
           temperature: item.temperature != null ? item.temperature.toFixed(1) : '-',
           humidity: item.humidity != null ? item.humidity.toFixed(1) : '-',
           light: item.light != null ? item.light.toFixed(0) : '-',
+          rainfall: item.rainfall != null ? item.rainfall.toFixed(2) : '-',
+          wind_speed: item.wind_speed != null ? item.wind_speed.toFixed(2) : '-',
           time: new Date(item.timestamp).toLocaleString(DATE_FORMAT.LOCALE),
           rawTimestamp: item.timestamp
         }));
@@ -208,6 +210,8 @@ const DataSensor = () => {
           <option>Temperature</option>
           <option>Humidity</option>
           <option>Light</option>
+          <option>Rainfall</option>
+          <option>Wind_speed</option>
         </select>
         <button 
           className="search-btn"
@@ -238,6 +242,12 @@ const DataSensor = () => {
                 <th onClick={() => handleSort('light')} style={{ cursor: 'pointer' }}>
                   Light(nits) {sortState['light'] === 'asc' ? '↑' : sortState['light'] === 'desc' ? '↓' : ''}
                 </th>
+                <th onClick={() => handleSort('rainfall')} style={{ cursor: 'pointer' }}>
+                  Rainfall(mm) {sortState['rainfall'] === 'asc' ? '↑' : sortState['rainfall'] === 'desc' ? '↓' : ''}
+                </th>
+                <th onClick={() => handleSort('wind_speed')} style={{ cursor: 'pointer' }}>
+                  Wind Speed(m/s) {sortState['wind_speed'] === 'asc' ? '↑' : sortState['wind_speed'] === 'desc' ? '↓' : ''}
+                </th>
                 <th onClick={() => handleSort('timestamp')} style={{ cursor: 'pointer' }}>
                   Time {sortState['timestamp'] === 'asc' ? '↑' : sortState['timestamp'] === 'desc' ? '↓' : ''}
                 </th>
@@ -251,6 +261,8 @@ const DataSensor = () => {
                     <td>{row.temperature}</td>
                     <td>{row.humidity}</td>
                     <td>{row.light}</td>
+                    <td>{row.rainfall}</td>
+                    <td>{row.wind_speed}</td>
                     <td 
                       onClick={() => handleCopyTime(row.time)}
                       style={{ cursor: 'pointer' }}
@@ -262,7 +274,7 @@ const DataSensor = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>
                     No data available for {selectedDate}
                   </td>
                 </tr>

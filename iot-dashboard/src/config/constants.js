@@ -30,15 +30,25 @@ export const SENSOR_THRESHOLDS = {
     warning: { min: 30, max: 70 },
   },
   light: {
-    danger: { min: 100, max: 4000 },
-    warning: { min: 200, max: 3000 },
+    danger: { min: 20, max: 900 },
+    warning: { min: 50, max: 750 },
+  },
+  rainfall: {
+    danger: { min: 0, max: 50 },
+    warning: { min: 0, max: 999 }, // Không dùng cảnh báo vàng, chỉ đỏ khi > 50mm (50%)
+  },
+  wind_speed: {
+    danger: { min: 0, max: 25 },
+    warning: { min: 0, max: 999 }, // Không dùng cảnh báo vàng, chỉ đỏ khi > 25 m/s (50%)
   },
 };
 
 export const SENSOR_RANGES = {
   temperature: { min: 0, max: 40, unit: '°C' },
   humidity: { min: 0, max: 100, unit: '%' },
-  light: { min: 0, max: 4095, unit: 'nits' },
+  light: { min: 0, max: 1000, unit: 'nits' },
+  rainfall: { min: 0, max: 100, unit: 'mm' },
+  wind_speed: { min: 0, max: 50, unit: 'm/s' },
 };
 
 export const PAGINATION = {

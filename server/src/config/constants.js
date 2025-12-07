@@ -2,6 +2,8 @@
 export const MQTT_TOPICS = {
   telemetry: 'iot/+/telemetry',
   ledStatus: 'iot/+/led/status',
+  fanStatus: 'iot/+/fan/status',
+  acStatus: 'iot/+/ac/status',
   status: 'iot/+/status'
 };
 

@@ -12,6 +12,8 @@ class MqttService {
       telemetry: [],
       status: [],
       ledStatus: [],
+      fanStatus: [],
+      acStatus: [],
     };
   }
 
@@ -39,6 +41,8 @@ class MqttService {
           `iot/${DEVICE_ID}/telemetry`,
           `iot/${DEVICE_ID}/status`,
           `iot/${DEVICE_ID}/led/status`,
+          `iot/${DEVICE_ID}/fan/status`,
+          `iot/${DEVICE_ID}/ac/status`,
         ], { qos: 1 });
       });
 
@@ -51,6 +55,10 @@ class MqttService {
             this.notifyListeners('telemetry', data);
           } else if (topic.endsWith('/led/status')) {
             this.notifyListeners('ledStatus', message);
+          } else if (topic.endsWith('/fan/status')) {
+            this.notifyListeners('fanStatus', message);
+          } else if (topic.endsWith('/ac/status')) {
+            this.notifyListeners('acStatus', message);
           } else if (topic.endsWith('/status')) {
             this.notifyListeners('status', message);
           }

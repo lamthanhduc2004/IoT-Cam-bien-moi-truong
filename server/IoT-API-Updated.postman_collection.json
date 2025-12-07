@@ -226,6 +226,103 @@
         "description": "Toggle LED (đảo trạng thái)"
       }
     }
+    ,
+    {
+      "name": "11. Control FAN - Turn ON",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"value\": \"ON\",\n  \"issued_by\": \"postman\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/cmd/fan",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "cmd", "fan"]
+        },
+        "description": "Bật FAN qua API (target=fan)"
+      }
+    },
+    {
+      "name": "12. Control FAN - Turn OFF",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"value\": \"OFF\",\n  \"issued_by\": \"postman\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/cmd/fan",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "cmd", "fan"]
+        },
+        "description": "Tắt FAN qua API"
+      }
+    },
+    {
+      "name": "13. Control AC - Turn ON",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"value\": \"ON\",\n  \"issued_by\": \"postman\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/cmd/ac",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "cmd", "ac"]
+        },
+        "description": "Bật AC qua API (target=ac)"
+      }
+    },
+    {
+      "name": "14. Control AC - Turn OFF",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"value\": \"OFF\",\n  \"issued_by\": \"postman\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/devices/esp32_01/cmd/ac",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "devices", "esp32_01", "cmd", "ac"]
+        },
+        "description": "Tắt AC qua API"
+      }
+    }
   ]
 }
 
